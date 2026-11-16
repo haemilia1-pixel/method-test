@@ -1,0 +1,3977 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INVITRO | Просмотр данных</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,600;0,700;0,900;1,900&display=swap');
+
+        :root {
+            /* Фирменный точный цвет INVITRO */
+            --invitro-cyan: #00a0c6; 
+            --invitro-cyan-hover: #008eb8;
+            --invitro-dark: #0F2B36;
+            --text-main: #333333;
+            --text-muted: #5c6b70;
+            --bg-page: #f4f7f6;
+            --bg-card: #ffffff;
+            --border-color: #e2e8f0;
+            --highlight-red: #e53935;
+            --value-bg: #f7fafb;
+        }
+
+        body {
+            font-family: 'Montserrat', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* --- Фирменный Header --- */
+        .header {
+            background: var(--bg-card);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+            margin-bottom: 20px;
+            border-top: 4px solid var(--invitro-cyan);
+        }
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .brand-bar {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        .logo-word {
+            font-size: 26px;
+            font-weight: 900;
+            font-style: italic;
+            color: var(--invitro-cyan);
+            letter-spacing: -0.02em;
+            line-height: 1;
+        }
+        .logo-sub {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--invitro-cyan);
+            margin-left: 15px;
+            padding-left: 15px;
+            border-left: 2px solid var(--invitro-cyan);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            line-height: 1.2;
+        }
+        .header-actions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .btn-export {
+            background-color: transparent;
+            color: var(--invitro-cyan);
+            border: 2px solid var(--invitro-cyan);
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .btn-export:hover {
+            background-color: var(--invitro-cyan);
+            color: white;
+        }
+
+        .btn-clear {
+            background-color: transparent;
+            color: #666;
+            border: 1px solid #ccc;
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .btn-clear:hover {
+            background-color: #eee;
+            color: #111;
+        }
+
+        /* Кнопки переключения режимов */
+        .btn-toggle-action {
+            background-color: transparent;
+            color: #666;
+            border: 1px solid #ccc;
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .btn-toggle-action:hover {
+            background-color: #eee;
+        }
+        .btn-toggle-action.active {
+            background-color: var(--invitro-cyan);
+            color: white;
+            border-color: var(--invitro-cyan);
+        }
+
+        .header h2 {
+            margin: 0 0 15px 0;
+            color: var(--invitro-dark);
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .file-upload-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 5px;
+        }
+        .btn-upload {
+            background-color: var(--invitro-cyan);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            display: inline-block;
+        }
+        .btn-upload:hover {
+            background-color: var(--invitro-cyan-hover);
+        }
+        input[type="file"] {
+            display: none;
+        }
+        .file-name {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        .status { font-size: 13px; color: var(--invitro-cyan); font-weight: 600; margin-bottom: 10px; }
+
+        details.loaded-files-details {
+            background: #fafcfc;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 8px 15px;
+            font-size: 13px;
+            margin-top: 10px;
+        }
+        details.loaded-files-details summary {
+            font-weight: 700;
+            color: var(--invitro-cyan);
+            cursor: pointer;
+            outline: none;
+            user-select: none;
+        }
+        details.loaded-files-details ul {
+            margin: 10px 0 0 0;
+            padding-left: 20px;
+            color: var(--invitro-dark);
+            line-height: 1.5;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px dashed var(--border-color);
+            align-items: flex-end;
+        }
+        .filter-group {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            min-width: 240px;
+            flex: 1;
+        }
+        .filter-group-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        .filter-group label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--invitro-dark);
+            margin-bottom: 0;
+            text-transform: none;
+            letter-spacing: 0.02em;
+            line-height: 1.3;
+            flex: 1;
+        }
+        .filter-selection-clear {
+            display: none;
+            flex-shrink: 0;
+            width: 22px;
+            height: 22px;
+            padding: 0;
+            border: none;
+            border-radius: 4px;
+            background: #e8eef0;
+            color: var(--invitro-dark);
+            font-size: 15px;
+            line-height: 1;
+            cursor: pointer;
+            font-family: inherit;
+            align-items: center;
+            justify-content: center;
+        }
+        .filter-selection-clear:hover {
+            background: #dde5e8;
+            color: var(--highlight-red);
+        }
+
+        .filter-search-wrap {
+            position: relative;
+            width: 100%;
+        }
+        .filter-search-wrap .filter-search-input {
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .filter-search-wrap .filter-search-input.has-selection-count {
+            padding-right: 46px;
+        }
+        .filter-selection-count {
+            display: none;
+            position: absolute;
+            right: 6px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            font-size: 10px;
+            font-weight: 800;
+            line-height: 1.2;
+            background: var(--invitro-cyan);
+            color: #fff;
+            border-radius: 999px;
+            padding: 3px 8px;
+            min-width: 22px;
+            text-align: center;
+            z-index: 1;
+        }
+        .filter-selection-count.visible {
+            display: block;
+        }
+        
+        .dropdown-check-list {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            max-height: 250px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            padding: 5px 0;
+        }
+        .dropdown-check-list.show {
+            display: block;
+        }
+        .dropdown-hint {
+            padding: 10px 12px;
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.45;
+            border-bottom: 1px dashed var(--border-color);
+        }
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background 0.1s ease;
+        }
+        .dropdown-item:hover {
+            background-color: #f0f7f7;
+        }
+        .dropdown-item input[type="checkbox"] {
+            margin-right: 10px;
+            width: 16px;
+            height: 16px;
+            accent-color: var(--invitro-cyan);
+            cursor: pointer;
+        }
+        .dropdown-item label {
+            margin: 0;
+            padding: 0;
+            text-transform: none;
+            font-weight: 500;
+            color: var(--invitro-dark);
+            cursor: pointer;
+            width: 100%;
+            display: block;
+        }
+
+        .filter-summary-bar {
+            display: none;
+            width: 100%;
+            margin-top: 14px;
+            padding: 10px 14px;
+            background: linear-gradient(90deg, #f0f9fb 0%, #fafcfc 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 12px;
+            color: var(--invitro-dark);
+            line-height: 1.5;
+        }
+        .filter-summary-bar.visible {
+            display: block;
+        }
+        .filter-summary-bar strong {
+            color: var(--invitro-cyan);
+            font-weight: 700;
+        }
+        .filter-summary-group {
+            display: inline-flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px;
+            margin-right: 4px;
+        }
+        .filter-summary-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 10px 3px 10px;
+            background: #fff;
+            border: 1px solid #c5e3ed;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--invitro-dark);
+            max-width: 100%;
+            word-break: break-word;
+            cursor: pointer;
+            font-family: inherit;
+            transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+        }
+        .filter-summary-chip:hover {
+            border-color: var(--invitro-cyan);
+            background: #f0f9fb;
+            color: var(--invitro-dark);
+        }
+        .filter-summary-chip-x {
+            color: var(--invitro-cyan);
+            font-size: 14px;
+            line-height: 1;
+            font-weight: 700;
+        }
+        .filter-summary-chip:hover .filter-summary-chip-x {
+            color: var(--highlight-red);
+        }
+        .filter-actions {
+            display: none;
+            width: 100%;
+            margin-top: 12px;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .filter-actions.visible {
+            display: flex;
+        }
+        .btn-apply-filters {
+            background-color: var(--invitro-cyan);
+            color: #fff;
+            border: none;
+            padding: 10px 22px;
+            border-radius: 22px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .btn-apply-filters:hover {
+            background-color: var(--invitro-cyan-hover);
+        }
+        .btn-apply-filters.pending {
+            box-shadow: 0 0 0 3px rgba(0, 160, 198, 0.35);
+        }
+
+        .results-toolbar {
+            display: none;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+            padding: 12px 16px;
+            background: var(--bg-card);
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+        .results-toolbar.visible {
+            display: flex;
+        }
+        .results-toolbar label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--invitro-dark);
+            white-space: nowrap;
+        }
+        .results-search-wrap {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 220px;
+        }
+        .results-search-input {
+            flex: 1;
+            min-width: 140px;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 13px;
+        }
+        .results-search-input:focus {
+            outline: 2px solid rgba(0, 160, 198, 0.35);
+            border-color: var(--invitro-cyan);
+        }
+        .results-search-nav {
+            display: none;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        .results-search-nav.visible {
+            display: flex;
+        }
+        #resultsSearchMatchCounter {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--invitro-dark);
+            white-space: nowrap;
+            min-width: 6.5em;
+            text-align: center;
+        }
+        .results-search-step-btn {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-card);
+            color: var(--invitro-cyan);
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            line-height: 1;
+        }
+        .results-search-step-btn:hover:not(:disabled) {
+            border-color: var(--invitro-cyan);
+            background: rgba(0, 160, 198, 0.08);
+        }
+        .results-search-step-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .results-count-pill {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .results {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card {
+            scroll-margin-top: 16px;
+            background: var(--bg-card);
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 18px rgba(15, 43, 54, 0.06);
+            border: 1px solid rgba(226, 232, 240, 0.9);
+            border-left: 5px solid var(--invitro-cyan);
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); 
+            row-gap: 12px;
+            column-gap: 30px; 
+        }
+        .card.filtered-out {
+            display: none !important;
+        }
+        
+        @media (max-width: 800px) {
+            .card { grid-template-columns: 1fr; } 
+        }
+
+        .card-field.full-width-header {
+            grid-column: 1 / -1; 
+            margin-bottom: 14px;
+            padding-bottom: 14px;
+            border-bottom: 2px solid var(--border-color);
+        }
+        .card-field.full-width-header .card-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--invitro-cyan);
+        }
+
+        .card-field {
+            padding-bottom: 10px;
+            border-bottom: 1px dashed #f0f0f0;
+        }
+        .card-label {
+            font-size: 11px;
+            text-transform: none;
+            color: var(--text-muted);
+            font-weight: 700;
+            margin-bottom: 6px;
+            letter-spacing: 0.02em;
+        }
+        .card-value {
+            font-size: 14px;
+            line-height: 1.62;
+            color: var(--invitro-dark);
+            font-weight: 500;
+            white-space: pre-line;
+            max-width: 42em;
+        }
+        .card-value.card-value--block {
+            max-width: none;
+        }
+        .card-value.card-value--multiline {
+            padding: 10px 12px;
+            background: var(--value-bg);
+            border-radius: 8px;
+            border: 1px solid #e8eef0;
+        }
+        .card-value-expand-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 8px;
+            align-items: center;
+        }
+        .card-value-expand {
+            display: inline-block;
+            padding: 0;
+            border: none;
+            background: none;
+            color: var(--invitro-cyan);
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+        .card-value-expand:hover {
+            color: var(--invitro-cyan-hover);
+        }
+        .card-field--profile-codes {
+            grid-column: 1 / -1;
+        }
+        .profile-codes-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .profile-codes-summary {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+        .profile-codes-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+        }
+        .profile-chip {
+            display: inline-block;
+            font-size: 11px;
+            font-weight: 600;
+            line-height: 1.3;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: #e8f4f8;
+            border: 1px solid #c5e3ed;
+            color: var(--invitro-dark);
+            max-width: 100%;
+            word-break: break-word;
+        }
+        .profile-chip--dim {
+            opacity: 0.45;
+        }
+        .profile-chip mark.search-highlight {
+            background: #fff9c4;
+            border-radius: 2px;
+            padding: 0 1px;
+        }
+        .profile-codes-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+        .profile-codes-search-input {
+            flex: 1;
+            min-width: 140px;
+            padding: 6px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 12px;
+        }
+        .profile-codes-search-input:focus {
+            outline: 2px solid rgba(0, 160, 198, 0.35);
+            border-color: var(--invitro-cyan);
+        }
+        .profile-codes-meta {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+        .profile-codes-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .profile-codes-btn {
+            border: none;
+            background: none;
+            color: var(--invitro-cyan);
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            text-decoration: underline;
+            text-underline-offset: 2px;
+            padding: 2px 4px;
+        }
+        .profile-codes-btn:hover {
+            color: var(--invitro-cyan-hover);
+        }
+        mark.search-highlight {
+            background: #fff9c4;
+            color: inherit;
+            padding: 0 1px;
+            border-radius: 2px;
+        }
+        mark.search-highlight--current {
+            background: #ffe082;
+            box-shadow: 0 0 0 2px var(--invitro-cyan);
+            border-radius: 2px;
+        }
+        
+        .no-data {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 40px;
+            background: var(--bg-card);
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+        }
+        .meta-info {
+            text-align: right;
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 10px;
+            font-weight: 500;
+        }
+
+        .sheet-picker {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            margin-top: 12px;
+            font-size: 13px;
+            color: var(--invitro-dark);
+        }
+        .sheet-picker.visible { display: flex; flex-wrap: wrap; }
+        .sheet-picker label { font-weight: 700; }
+        .sheet-picker select {
+            min-width: 220px;
+            padding: 6px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 13px;
+        }
+
+        .column-warning {
+            display: none;
+            margin-top: 10px;
+            padding: 10px 14px;
+            background: #fff8e6;
+            border: 1px solid #ffd54f;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #5d4037;
+            line-height: 1.45;
+        }
+        .column-warning.visible { display: block; }
+
+        .filter-summary-clear {
+            margin-left: 8px;
+            padding: 0 6px;
+            border: none;
+            background: none;
+            color: var(--invitro-cyan);
+            font-size: 18px;
+            line-height: 1;
+            cursor: pointer;
+            vertical-align: middle;
+        }
+        .filter-summary-clear:hover { color: var(--invitro-cyan-hover); }
+
+        .results-layout {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+        }
+        .toc-sidebar {
+            display: none;
+            flex: 0 0 220px;
+            position: sticky;
+            top: 16px;
+            max-height: calc(100vh - 32px);
+            overflow: auto;
+            padding: 12px 14px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+        .toc-sidebar.visible { display: block; }
+        .toc-sidebar h4 {
+            margin: 0 0 10px 0;
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 0.04em;
+        }
+        .toc-sidebar a {
+            display: block;
+            padding: 6px 0;
+            color: var(--invitro-dark);
+            text-decoration: none;
+            border-bottom: 1px solid #f0f0f0;
+            line-height: 1.35;
+        }
+        .toc-sidebar a:last-child { border-bottom: none; }
+        .toc-sidebar a:hover { color: var(--invitro-cyan); }
+        .results-main { flex: 1; min-width: 0; }
+
+        .card-header-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            grid-column: 1 / -1;
+        }
+        .card-actions {
+            display: flex;
+            flex-shrink: 0;
+            gap: 8px;
+            align-items: center;
+        }
+        .card-select-cb {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--invitro-cyan);
+            cursor: pointer;
+        }
+        .btn-card-mini {
+            padding: 4px 10px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--invitro-cyan);
+            background: #f0f9fb;
+            border: 1px solid #b8dfe8;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            white-space: nowrap;
+        }
+        .btn-card-mini:hover {
+            background: #e0f3f7;
+        }
+
+        .lazy-sentinel {
+            height: 4px;
+            margin: 8px 0;
+            grid-column: 1 / -1;
+        }
+
+        .compare-panel {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 2000;
+            width: min(560px, calc(100vw - 40px));
+            max-height: min(70vh, 520px);
+            overflow: auto;
+            padding: 16px;
+            background: var(--bg-card);
+            border: 2px solid var(--invitro-cyan);
+            border-radius: 12px;
+            box-shadow: 0 12px 40px rgba(15, 43, 54, 0.18);
+            font-size: 12px;
+        }
+        .compare-panel.visible { display: block; }
+        .compare-panel h4 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            color: var(--invitro-cyan);
+        }
+        .compare-panel table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .compare-panel th,
+        .compare-panel td {
+            padding: 8px 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: top;
+        }
+        .compare-panel th {
+            background: #f7fafb;
+            font-weight: 700;
+            color: var(--invitro-dark);
+        }
+        .compare-panel .diff { background: #ffebee; }
+        .compare-close {
+            float: right;
+            padding: 2px 8px;
+            font-size: 18px;
+            line-height: 1;
+            border: none;
+            background: none;
+            cursor: pointer;
+            color: var(--text-muted);
+        }
+        .compare-close:hover { color: var(--invitro-dark); }
+
+        .scroll-top-btn {
+            display: none;
+            position: fixed;
+            bottom: 24px;
+            left: 24px;
+            z-index: 1500;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 2px solid var(--invitro-cyan);
+            background: var(--bg-card);
+            color: var(--invitro-cyan);
+            font-size: 20px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+            align-items: center;
+            justify-content: center;
+        }
+        .scroll-top-btn.visible { display: flex; }
+        .scroll-top-btn:hover {
+            background: var(--invitro-cyan);
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div class="header-top">
+            <div class="brand-bar">
+                <span class="logo-word">INVITRO</span>
+                <span class="logo-sub">Аналитика тестов</span>
+            </div>
+            <div class="header-actions">
+                <!-- Новая кнопка объединения одинаковых тестов -->
+                <button id="toggleGroupBtn" class="btn-toggle-action" title="Вкл: одна карточка на каждый «Код теста Название теста»">Группы тестов: Выкл</button>
+                <button id="toggleDiffBtn" class="btn-toggle-action">Различия: Выкл</button>
+                <button id="toggleLkkOnlyBtn" class="btn-toggle-action" title="Показать в карточке только столбцы U–AL (как в Excel)">Только ЛКК: Выкл</button>
+                <button id="toggleProfilesBtn" class="btn-toggle-action" title="Показать в карточках столбец «Код профиля тестов»">Профили: Выкл</button>
+                <button id="clearBtn" class="btn-clear">Очистить фильтры</button>
+                <button id="exportBtn" class="btn-export" style="display: none;">Экспорт в HTML</button>
+                <button id="exportExcelBtn" class="btn-export" style="display: none;">Выгрузка Excel</button>
+            </div>
+        </div>
+        
+        <h2>Универсальный поиск по базе</h2>
+        
+        <div class="file-upload-wrapper" id="manualUploadBlock">
+            <label for="fileInput" class="btn-upload">Выберите Excel файл вручную</label>
+            <input type="file" id="fileInput" accept=".xlsx, .xls, .csv" />
+            <span id="fileNameDisplay" class="file-name">Файл не выбран</span>
+        </div>
+        <div id="status" class="status"></div>
+
+        <div id="sheetPicker" class="sheet-picker">
+            <label for="sheetSelect">Лист Excel</label>
+            <select id="sheetSelect" aria-label="Выбор листа"></select>
+        </div>
+        <div id="columnWarning" class="column-warning" role="status"></div>
+
+        <details class="loaded-files-details" id="autoFilesBlock" style="display: none;">
+            <summary>Список активных файлов в работе</summary>
+            <ul id="autoFilesList"></ul>
+        </details>
+        
+        <div class="controls" id="filtersContainer" style="display: none;"></div>
+        <div id="filterActions" class="filter-actions">
+            <button type="button" id="applyFiltersBtn" class="btn-apply-filters">Применить фильтры</button>
+        </div>
+        <div id="filterSummaryBar" class="filter-summary-bar" aria-live="polite"></div>
+    </div>
+
+    <div id="resultsToolbar" class="results-toolbar">
+        <label for="resultsSearchInput">Поиск в результатах</label>
+        <div class="results-search-wrap">
+            <input type="search" id="resultsSearchInput" class="results-search-input" placeholder="Введите фрагмент текста…" autocomplete="off" />
+            <div id="resultsSearchNav" class="results-search-nav" aria-live="polite">
+                <button type="button" id="resultsSearchPrev" class="results-search-step-btn" title="Предыдущее совпадение (Shift+Enter)" aria-label="Предыдущее совпадение">↑</button>
+                <span id="resultsSearchMatchCounter"></span>
+                <button type="button" id="resultsSearchNext" class="results-search-step-btn" title="Следующее совпадение (Enter)" aria-label="Следующее совпадение">↓</button>
+            </div>
+        </div>
+        <span id="resultsCountPill" class="results-count-pill"></span>
+    </div>
+    <div class="results-layout" id="resultsLayout">
+        <nav id="tocSidebar" class="toc-sidebar" aria-label="Оглавление по карточкам"></nav>
+        <div class="results-main">
+            <div class="results" id="resultsContainer"></div>
+        </div>
+    </div>
+    <div id="comparePanel" class="compare-panel">
+        <button type="button" class="compare-close" id="comparePanelClose" title="Закрыть">×</button>
+        <h4>Сравнение тестов</h4>
+        <div id="comparePanelBody"></div>
+    </div>
+    <button type="button" id="scrollTopBtn" class="scroll-top-btn" title="Наверх" aria-label="Наверх">↑</button>
+</div>
+
+<script>
+    // ==========================================
+    // НАСТРОЙКИ
+    // ==========================================
+    /** Первый столбец блока P–Z в OPP-10588 (Excel колонка P): если он есть в данных — включается развёртка микробиологии. */
+    const OPP10588_PZ_FIRST_COLUMN = "Оборудование для окраски мазков";
+
+    const CONFIG = {
+        filters: [
+            "Код профиля тестов",
+            "Код теста Название теста",
+            "Лаборатория заказа",
+            "Лаборатория исполнения",
+            "Аналит",
+            "Биоматериал",
+            "Подразделение лаборатории",
+            "Внешняя лаборатория"
+        ],
+        
+        // Строка = одно поле из одного столбца; объект { label, columns, sep } = несколько столбцов в одно поле (в строке — sep).
+        /** OPP-10587 и совместимые: блок «измерительное / ПЦР» — без микробиологических P–Z. */
+        displayStandard: [
+            "Код профиля тестов",
+            "Код теста Название теста",
+            "Лаборатория исполнения",
+            "Подразделение лаборатории",
+            "Внешняя лаборатория",
+            "Аналит",
+            "Биоматериал",
+            "Тип транспортного контейнера",
+            "Температура хранения и транспортировки",
+            "Код Наименование методики",
+            "Начало работы методикой",
+            "Автоматизация методики",
+            "Тип результата",
+            "Принцип метода",
+            "Оборудование измерительное",
+            "Тест-система основная",
+            "Калибратор",
+            "Нижний предел определения",
+            "Верхний предел определения",
+            "Верхний предел определения с разведением (чувствительность для ПЦР)",
+            {
+                label: "Внутрилабораторный контрольный материал",
+                sep: "\n",
+                columns: [
+                    "Внутрилабораторный контрольный материал Bio-Rad",
+                    "Внутрилабораторный контрольный материал Abbott",
+                    "Внутрилабораторный контрольный материал Instrumentation Laboratory, Interlab, Ренам",
+                    "Внутрилабораторный контрольный материал Вектор-Бест",
+                    "Внутрилабораторный контрольный материал Sysmex, Медика-Н, Mindrey",
+                    "Внутрилабораторный контрольный материал  Dirui, Snibe Diagnostic",
+                    "Внутрилабораторный контрольный материал Siemens,  Алкор Био",
+                    "Внутрилабораторный контрольный материал",
+                    "Внутрилабораторный пулированный контрольный материал ИНВИТРО"
+                ]
+            },
+            {
+                label: "Программа МЛС",
+                sep: "\n",
+                columns: [
+                    "Программа МЛС EQAS, RIQAS",
+                    "Программа МЛС ФСВОК",
+                    "Программа МЛС CaresphereXQC",
+                    "Программа МЛС СВКК ИГХИ"
+                ]
+            },
+            {
+                label: "Альтернативная программа контроля",
+                sep: "\n",
+                columns: [
+                    "Unity: альтернативная программа контроля",
+                    "NOPAM: альтернативная процедура контроля",
+                    "WestgarrdQC: альтернативная программа контроля",
+                    "ККП ЭФИР: альтернативная процедура контроля"
+                ]
+            },
+            "ВИ: Контрольный материал МЛС(ВОК)",
+            "ВИ: Альтернативный контроль"
+        ],
+        /** OPP-10588: вместо «измерительного» блока идут столбцы P–Z (микробиология), затем объединённый ВЛКМ и МЛС. */
+        displayMicro: [
+            "Код профиля тестов",
+            "Код теста Название теста",
+            "Лаборатория исполнения",
+            "Подразделение лаборатории",
+            "Внешняя лаборатория",
+            "Аналит",
+            "Биоматериал",
+            "Тип транспортного контейнера",
+            "Температура хранения и транспортировки",
+            "Код Наименование методики",
+            "Начало работы методикой",
+            "Автоматизация методики",
+            "Тип результата",
+            "Принцип метода",
+            "Оборудование для окраски мазков",
+            "Оборудование для микроскопии мазков",
+            "Оборудование для приготовления питательных сред",
+            "Оборудование для первичного посева",
+            "Оборудование для идентификации",
+            "Оборудование для определения чувствительности к антибиотикам учета антибиотикограмм ДДМ",
+            "Питательные среды для посева",
+            "Питательные среды для антибиотикочувствительности",
+            "Тест-системы для определения АБЧ",
+            "Тест-системы для идентификации микроорганизмов",
+            "Диски с АБП/АМП",
+            {
+                label: "Внутрилабораторный контрольный материал",
+                sep: "\n",
+                columns: [
+                    "Внутрилабораторный контрольный материал"
+                ]
+            },
+            {
+                label: "Программа МЛС",
+                sep: "\n",
+                columns: [
+                    "Программа МЛС"
+                ]
+            }
+        ],
+        
+        highlightDifferences: false, 
+        groupTests: false, // Вкл: одна карточка на «Код теста Название теста»
+        /** Вкл: в карточке только столбцы диапазона Excel U–AL (индексы 20–37 в первой строке листа). */
+        onlyLkk: false,
+        /** Вкл: показывать в карточке поле «Код профиля тестов» (по умолчанию скрыто). */
+        showProfilesInCards: false,
+        /** Как склеивать несколько разных значений по одному полю (несколько строк Excel под одним тестом): запятая или с новой строки. */
+        multiRowValueSep: "\n",
+        /** По этим столбцам делим карточки; значения в ячейке через «,» / «;» — отдельная карточка на каждый код. */
+        cardGroupByColumns: ["Код профиля тестов"],
+        /** Поля длиннее этого числа символов сворачиваются с кнопкой «Показать полностью». */
+        expandLongFieldAfter: 400,
+        profileCodesField: "Код профиля тестов",
+        /** Свернуть список кодов профиля в карточке, если кодов больше порога. */
+        profileCodesCollapseAfter: 12,
+        /** Сколько чипов показывать в свёрнутом виде. */
+        profileCodesPreviewCount: 6,
+        /** Ленивый список фильтра: если значений больше — в DOM только по поиску. */
+        filterDropdownLazyMin: 80,
+        filterDropdownMaxItems: 200,
+        /** С этого числа строк — режим большой таблицы (группы тестов, без восстановления фильтров). */
+        largeFileRowThreshold: 2500,
+        /** Индексация фильтров порциями (строк за шаг). */
+        largeFileIndexingChunk: 400,
+        /** Лимит виртуальных карточек (тест×профиль); выше — блокируем отрисовку. */
+        maxVirtualCards: 12000,
+        /** Без «Группы тестов» не строить карточки, если отфильтровано больше строк. */
+        maxFilteredRowsStrictProfileMode: 3500,
+        /** Задержка поиска по карточкам (мс). */
+        resultsSearchDebounceMs: 200,
+        /** Сохранять выбранные фильтры в localStorage (ключ). */
+        filtersStorageKey: "invitro_viewer_filters_v1",
+        /** Колонки, без которых выводится предупреждение (имена из CONFIG). */
+        requiredColumns: ["Код теста Название теста"],
+        /** Показывать оглавление при числе карточек не меньше порога. */
+        tocMinCards: 5,
+        /** Порция карточек при «ленивой» подгрузке (0 = отключить). */
+        lazyRenderBatch: 25,
+        headerColumn: "Код теста Название теста"
+    };
+    // ==========================================
+
+    /** Активная схема карточки: после загрузки файла — OPP-10587 (displayStandard) или OPP-10588 (displayMicro). */
+    let activeDisplay = CONFIG.displayStandard.slice();
+
+    let globalData = [];
+    /** Кэш сопоставления заголовков столбцов для быстрого getRowValue. */
+    let rowColumnCache = null;
+    /** Уникальные значения фильтров (строится один раз на загрузку). */
+    let filterUniquesIndex = null;
+    /** Справочник: значение фильтра → индексы строк в globalData (для быстрого «Применить»). */
+    let filterRowIndex = null;
+    /** Сбрасывается при новой загрузке листа — отменяет отложенную индексацию. */
+    let sheetLoadToken = 0;
+    let selectedFilters = {};
+    /** Применённые фильтры (поиск и строка «Активные фильтры»). */
+    let appliedFilters = {};
+    let currentFilteredData = [];
+    let currentAnyFilterActive = false;
+
+    let resultsSearchTimer = null;
+    let lastResultsSearchQuery = "";
+    let resultsSearchMarks = [];
+    let resultsSearchActiveIndex = -1;
+
+    let pendingWorkbook = null;
+    let lastLoadedFileName = "";
+    let lazyRenderState = null;
+    let lazyObserver = null;
+    let scrollTopTicking = false;
+
+    /** Первая строка листа (заголовки столбцов), по порядку A, B, C… — для среза U–AL. */
+    let sheetHeaderRow = null;
+    /** Диапазон «только ЛКК»: столбцы U–AL включительно (0-based индексы в первой строке). */
+    var LKK_COL_START = 20;
+    var LKK_COL_END = 37;
+
+    /** Последняя отрисовка: для сравнения и экспорта. */
+    var lastRenderContext = null;
+
+    function buildRowColumnCache(sampleRow) {
+        rowColumnCache = new Map();
+        if (!sampleRow) return;
+        for (var key in sampleRow) {
+            rowColumnCache.set(normalizeHeaderName(key), key);
+        }
+    }
+
+    function isLikelyDateColumn(columnName) {
+        if (!columnName) return false;
+        return /начало работы методикой|дата|окончан/i.test(String(columnName));
+    }
+
+    function padDatePart(n) {
+        return String(n).padStart(2, "0");
+    }
+
+    function formatDateDdMmYyyy(d, m, y) {
+        return padDatePart(d) + "." + padDatePart(m) + "." + y;
+    }
+
+    function tryNormalizeExcelSerial(value, columnName) {
+        if (typeof value !== "number" || !isFinite(value)) return null;
+        if (!isLikelyDateColumn(columnName)) return null;
+        if (typeof XLSX === "undefined" || !XLSX.SSF || !XLSX.SSF.parse_date_code) return null;
+        var dc = XLSX.SSF.parse_date_code(value);
+        if (!dc || dc.y < 1900 || dc.y > 2100) return null;
+        return formatDateDdMmYyyy(dc.d, dc.m, dc.y);
+    }
+
+    function tryNormalizeDateString(text, columnName) {
+        if (text === undefined || text === null) return null;
+        var s = String(text).trim();
+        if (!s) return null;
+        if (!isLikelyDateColumn(columnName) && !/^\d{4}-\d{2}-\d{2}/.test(s)) return null;
+        if (/^\d{1,2}\.\d{1,2}\.\d{4}$/.test(s)) return s;
+        var iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (iso) return iso[3] + "." + iso[2] + "." + iso[1];
+        return null;
+    }
+
+    function normalizeFieldValue(raw, columnName) {
+        if (raw === undefined || raw === null) return "";
+        if (raw instanceof Date) {
+            if (isNaN(raw.getTime())) return "";
+            return formatDateDdMmYyyy(raw.getDate(), raw.getMonth() + 1, raw.getFullYear());
+        }
+        if (typeof raw === "number") {
+            var serial = tryNormalizeExcelSerial(raw, columnName);
+            return serial !== null ? serial : String(raw);
+        }
+        var asDate = tryNormalizeDateString(raw, columnName);
+        return asDate !== null ? asDate : String(raw);
+    }
+
+    function getRawRowCell(row, columnName) {
+        if (!row) return null;
+        if (row[columnName] !== undefined && row[columnName] !== null) return row[columnName];
+        if (rowColumnCache) {
+            var cachedKey = rowColumnCache.get(normalizeHeaderName(columnName));
+            if (cachedKey !== undefined && row[cachedKey] !== undefined && row[cachedKey] !== null) {
+                return row[cachedKey];
+            }
+        }
+        var normTarget = normalizeHeaderName(columnName);
+        for (var key in row) {
+            if (normalizeHeaderName(key) === normTarget) {
+                return row[key];
+            }
+        }
+        return null;
+    }
+
+    function getRowValue(row, columnName) {
+        var raw = getRawRowCell(row, columnName);
+        if (raw === undefined || raw === null) return "";
+        return normalizeFieldValue(raw, columnName);
+    }
+
+    function addFilterValuesFromRow(row, filterCol, outSet) {
+        if (!outSet) return;
+        var val = getRowValue(row, filterCol);
+        if (isListSplittableColumn(filterCol)) {
+            splitListCellValue(val, filterCol).forEach(function (p) {
+                if (p && p !== "Не заполнено") outSet.add(p);
+            });
+        } else if (val !== "" && val !== undefined) {
+            outSet.add(val);
+        }
+    }
+
+    function resetFilterIndexes() {
+        filterUniquesIndex = {};
+        filterRowIndex = {};
+        CONFIG.filters.forEach(function (col) {
+            filterUniquesIndex[col] = new Set();
+            filterRowIndex[col] = new Map();
+        });
+    }
+
+    function appendRowIdToFilterIndex(col, value, rowIndex) {
+        if (!filterRowIndex || !filterRowIndex[col]) return;
+        var list = filterRowIndex[col].get(value);
+        if (!list) {
+            list = [];
+            filterRowIndex[col].set(value, list);
+        }
+        if (list.length && list[list.length - 1] === rowIndex) return;
+        list.push(rowIndex);
+    }
+
+    function indexRowForFilters(rowIndex, row) {
+        for (var f = 0; f < CONFIG.filters.length; f++) {
+            var col = CONFIG.filters[f];
+            var val = getRowValue(row, col);
+            if (isListSplittableColumn(col)) {
+                splitListCellValue(val, col).forEach(function (p) {
+                    if (p && p !== "Не заполнено") {
+                        filterUniquesIndex[col].add(p);
+                        appendRowIdToFilterIndex(col, p, rowIndex);
+                    }
+                });
+            } else if (val !== "" && val !== undefined) {
+                filterUniquesIndex[col].add(val);
+                appendRowIdToFilterIndex(col, val, rowIndex);
+            }
+        }
+    }
+
+    function finalizeFilterRowIndex() {
+        if (!filterRowIndex) return;
+        CONFIG.filters.forEach(function (col) {
+            filterRowIndex[col].forEach(function (arr, value) {
+                if (!arr || arr.length < 2) return;
+                var unique = [];
+                var prev = -1;
+                for (var i = 0; i < arr.length; i++) {
+                    var id = arr[i];
+                    if (id !== prev) {
+                        unique.push(id);
+                        prev = id;
+                    }
+                }
+                filterRowIndex[col].set(value, unique);
+            });
+        });
+    }
+
+    function rebuildFilterUniquesIndexSync() {
+        resetFilterIndexes();
+        for (var i = 0; i < globalData.length; i++) {
+            indexRowForFilters(i, globalData[i]);
+        }
+        finalizeFilterRowIndex();
+    }
+
+    function rebuildFilterUniquesIndex(done) {
+        if (!done) {
+            rebuildFilterUniquesIndexSync();
+            return;
+        }
+        resetFilterIndexes();
+        var idx = 0;
+        var total = globalData.length;
+        var chunk = Math.max(100, CONFIG.largeFileIndexingChunk | 0);
+        var statusEl = document.getElementById("status");
+        var showProgress = total > CONFIG.largeFileRowThreshold;
+
+        function step() {
+            var end = Math.min(idx + chunk, total);
+            for (; idx < end; idx++) {
+                indexRowForFilters(idx, globalData[idx]);
+            }
+            if (statusEl && showProgress) {
+                statusEl.innerText =
+                    "Справочник для фильтров: " + idx + " / " + total + " строк…";
+            }
+            if (idx < total) {
+                setTimeout(step, 0);
+            } else {
+                finalizeFilterRowIndex();
+                done();
+            }
+        }
+        if (total <= CONFIG.largeFileRowThreshold) {
+            rebuildFilterUniquesIndexSync();
+            done();
+        } else {
+            setTimeout(step, 0);
+        }
+    }
+
+    function intersectRowIdsForFilterState(state, skipColumn) {
+        if (!filterRowIndex || !state) return null;
+        var activeCols = [];
+        for (var i = 0; i < CONFIG.filters.length; i++) {
+            var col = CONFIG.filters[i];
+            if (col === skipColumn) continue;
+            if (state[col] && state[col].size > 0) activeCols.push(col);
+        }
+        if (!activeCols.length) return null;
+
+        var result = null;
+        for (var c = 0; c < activeCols.length; c++) {
+            var col = activeCols[c];
+            var colUnion = new Set();
+            state[col].forEach(function (val) {
+                var list = filterRowIndex[col] && filterRowIndex[col].get(val);
+                if (!list) return;
+                for (var j = 0; j < list.length; j++) colUnion.add(list[j]);
+            });
+            if (colUnion.size === 0) return new Set();
+            if (result === null) {
+                result = colUnion;
+            } else {
+                var smaller = result.size <= colUnion.size ? result : colUnion;
+                var larger = smaller === result ? colUnion : result;
+                var inter = new Set();
+                smaller.forEach(function (rowId) {
+                    if (larger.has(rowId)) inter.add(rowId);
+                });
+                result = inter;
+                if (result.size === 0) return result;
+            }
+        }
+        return result;
+    }
+
+    function countRowsForFilterState(state, skipColumn) {
+        var ids = intersectRowIdsForFilterState(state, skipColumn);
+        if (ids === null) return globalData.length;
+        return ids.size;
+    }
+
+    function collectAllowedValuesFromRowIds(rowIds, targetCol) {
+        if (rowIds === null) {
+            if (filterUniquesIndex && filterUniquesIndex[targetCol]) {
+                return new Set(filterUniquesIndex[targetCol]);
+            }
+            return new Set();
+        }
+        var allowed = new Set();
+        if (rowIds.size === 0) return allowed;
+        rowIds.forEach(function (rowIndex) {
+            if (globalData[rowIndex]) addFilterValuesFromRow(globalData[rowIndex], targetCol, allowed);
+        });
+        return allowed;
+    }
+
+    function syncGroupTestsButtonUi() {
+        var btn = document.getElementById("toggleGroupBtn");
+        if (!btn) return;
+        if (CONFIG.groupTests) {
+            btn.classList.add("active");
+            btn.innerText = "Группы тестов: Вкл";
+        } else {
+            btn.classList.remove("active");
+            btn.innerText = "Группы тестов: Выкл";
+        }
+    }
+
+    function applyLargeFileDefaults() {
+        if (globalData.length < CONFIG.largeFileRowThreshold) return;
+        if (!CONFIG.groupTests) {
+            CONFIG.groupTests = true;
+            syncGroupTestsButtonUi();
+        }
+    }
+
+    function useProfileSplitForCards() {
+        return CONFIG.showProfilesInCards && !CONFIG.groupTests;
+    }
+
+    function countVirtualCards(filteredData, splitCol) {
+        var profileCol =
+            CONFIG.cardGroupByColumns && CONFIG.cardGroupByColumns.length
+                ? CONFIG.cardGroupByColumns[0]
+                : "Код профиля тестов";
+        if (CONFIG.groupTests || !CONFIG.showProfilesInCards) {
+            var seen = new Set();
+            for (var i = 0; i < filteredData.length; i++) {
+                var t = String(getRowValue(filteredData[i], splitCol)).trim();
+                if (!t) t = "Не заполнено";
+                seen.add(t);
+            }
+            return seen.size;
+        }
+        var total = 0;
+        var cap = CONFIG.maxVirtualCards | 0;
+        for (var j = 0; j < filteredData.length; j++) {
+            var parts = splitListCellValue(getRowValue(filteredData[j], profileCol), profileCol);
+            total += parts.length;
+            if (cap > 0 && total > cap) return total;
+        }
+        return total;
+    }
+
+    function readWorkbookArrayBuffer(arrayBuffer) {
+        return XLSX.read(arrayBuffer, {
+            type: "array",
+            cellDates: false,
+            cellStyles: false,
+            sheetStubs: true
+        });
+    }
+
+    function cloneFilterSets(source) {
+        var out = {};
+        for (var col in source) {
+            out[col] = new Set(source[col] || []);
+        }
+        return out;
+    }
+
+    function filterRowsBySelectedFilters(data, skipColumn, filterState) {
+        var state = filterState || selectedFilters;
+        var any = false;
+        for (var col in state) {
+            if (col === skipColumn) continue;
+            if (state[col].size > 0) {
+                any = true;
+                break;
+            }
+        }
+        if (!any) return data;
+
+        if (filterRowIndex && data === globalData) {
+            var ids = intersectRowIdsForFilterState(state, skipColumn);
+            if (ids === null) return data;
+            var indexed = [];
+            ids.forEach(function (rowIndex) {
+                if (data[rowIndex] !== undefined) indexed.push(data[rowIndex]);
+            });
+            return indexed;
+        }
+
+        var out = [];
+        for (var i = 0; i < data.length; i++) {
+            var row = data[i];
+            var ok = true;
+            for (var c in state) {
+                if (c === skipColumn) continue;
+                if (state[c].size > 0 && !rowMatchesFilterColumn(row, c, state)) {
+                    ok = false;
+                    break;
+                }
+            }
+            if (ok) out.push(row);
+        }
+        return out;
+    }
+
+    function collectAllowedValuesForColumn(data, targetCol) {
+        var allowed = new Set();
+        for (var i = 0; i < data.length; i++) {
+            addFilterValuesFromRow(data[i], targetCol, allowed);
+        }
+        return allowed;
+    }
+
+    function isListSplittableColumn(columnName) {
+        return (CONFIG.cardGroupByColumns || []).indexOf(columnName) !== -1;
+    }
+
+    /** В OPP-10587 в «Код профиля тестов» часто несколько кодов через запятую в одной ячейке. */
+    function splitListCellValue(raw, columnName) {
+        if (!isListSplittableColumn(columnName)) {
+            var single = raw === undefined || raw === null ? "" : String(raw).trim();
+            return single ? [single] : ["Не заполнено"];
+        }
+        if (raw === undefined || raw === null || String(raw).trim() === "") return ["Не заполнено"];
+        var parts = String(raw)
+            .split(/[,;]/)
+            .map(function (p) {
+                return p.trim();
+            })
+            .filter(Boolean);
+        return parts.length ? parts : ["Не заполнено"];
+    }
+
+    function setRowColumnValue(row, columnName, value) {
+        var clone = Object.assign({}, row);
+        if (clone[columnName] !== undefined) {
+            clone[columnName] = value;
+            return clone;
+        }
+        var normTarget = columnName.toLowerCase().replace(/\s+/g, " ").trim();
+        for (var key in row) {
+            if (key.toLowerCase().replace(/\s+/g, " ").trim() === normTarget) {
+                clone = Object.assign({}, row);
+                clone[key] = value;
+                return clone;
+            }
+        }
+        clone[columnName] = value;
+        return clone;
+    }
+
+    function pushRowToTestMap(testMap, row, splitCol, profileCol, profileOverride) {
+        var testName = getRowValue(row, splitCol);
+        if (!String(testName).trim()) testName = "Не заполнено";
+        else testName = String(testName).trim();
+
+        var groupMatch = {};
+        groupMatch[splitCol] = testName;
+
+        var key;
+        if (CONFIG.groupTests || !CONFIG.showProfilesInCards) {
+            key = splitCol + "\u0002" + testName;
+        } else {
+            var prof =
+                profileOverride !== null && profileOverride !== undefined
+                    ? String(profileOverride).trim()
+                    : String(getRowValue(row, profileCol)).trim();
+            if (!prof) prof = "Не заполнено";
+            groupMatch[profileCol] = prof;
+            key = splitCol + "\u0002" + testName + "\u0001" + profileCol + "\u0002" + prof;
+        }
+
+        if (!testMap.has(key)) {
+            testMap.set(key, {
+                rows: [],
+                testName: testName,
+                groupMatch: groupMatch
+            });
+        }
+        testMap.get(key).rows.push({ row: row, profileOverride: profileOverride });
+    }
+
+    function accumulateTestMapFromFilteredData(filteredData, testMap, splitCol) {
+        var profileCol =
+            CONFIG.cardGroupByColumns && CONFIG.cardGroupByColumns.length
+                ? CONFIG.cardGroupByColumns[0]
+                : "Код профиля тестов";
+        for (var i = 0; i < filteredData.length; i++) {
+            var row = filteredData[i];
+            if (CONFIG.groupTests || !CONFIG.showProfilesInCards) {
+                pushRowToTestMap(testMap, row, splitCol, profileCol, null);
+                continue;
+            }
+            var parts = splitListCellValue(getRowValue(row, profileCol), profileCol);
+            for (var p = 0; p < parts.length; p++) {
+                pushRowToTestMap(testMap, row, splitCol, profileCol, parts[p]);
+            }
+        }
+    }
+
+    function getBundleComposedValue(entry, spec, profileCol) {
+        var row = entry.row;
+        if (
+            profileCol &&
+            spec.key === profileCol &&
+            entry.profileOverride !== null &&
+            entry.profileOverride !== undefined
+        ) {
+            return formatDisplayValue(entry.profileOverride);
+        }
+        return getComposedRowValue(row, spec);
+    }
+
+    function rowMatchesFilterColumn(row, col, filterState) {
+        var state = filterState || selectedFilters;
+        if (!state[col] || state[col].size === 0) return true;
+        var val = getRowValue(row, col);
+        if (isListSplittableColumn(col)) {
+            return splitListCellValue(val, col).some(function (p) {
+                return state[col].has(p);
+            });
+        }
+        return state[col].has(val);
+    }
+
+    function syncCheckboxForFilterValue(filterCol, value, checked) {
+        var dd = document.getElementById("drop_" + sanitizeId(filterCol));
+        if (!dd) return;
+        dd.querySelectorAll(".dropdown-item input[type=checkbox]").forEach(function (cb) {
+            if (cb.value === value) cb.checked = !!checked;
+        });
+    }
+
+    function filtersArePending() {
+        for (var i = 0; i < CONFIG.filters.length; i++) {
+            var col = CONFIG.filters[i];
+            var a = appliedFilters[col] || new Set();
+            var s = selectedFilters[col] || new Set();
+            if (a.size !== s.size) return true;
+            var vals = Array.from(s);
+            for (var j = 0; j < vals.length; j++) {
+                if (!a.has(vals[j])) return true;
+            }
+        }
+        return false;
+    }
+
+    function updateApplyButtonUi() {
+        var btn = document.getElementById("applyFiltersBtn");
+        if (!btn) return;
+        btn.classList.toggle("pending", filtersArePending());
+    }
+
+    function syncAppliedFromSelected() {
+        CONFIG.filters.forEach(function (col) {
+            appliedFilters[col] = new Set(selectedFilters[col] || []);
+        });
+    }
+
+    /** Любой символ \ в тексте ячейки — разделитель: показываем следующий фрагмент с новой строки. */
+    function formatDisplayValue(s) {
+        if (s === undefined || s === null) return "";
+        return String(s)
+            .split("\\")
+            .map(function (part) { return part.trim(); })
+            .filter(function (part) { return part !== ""; })
+            .join("\n")
+            .trim();
+    }
+
+    function escapeAttr(str) {
+        return String(str)
+            .replace(/&/g, "&amp;")
+            .replace(/"/g, "&quot;")
+            .replace(/</g, "&lt;");
+    }
+
+    function escapeHtml(str) {
+        if (str === undefined || str === null) return "";
+        var d = document.createElement("div");
+        d.textContent = String(str);
+        return d.innerHTML;
+    }
+
+    function escapeRegExp(s) {
+        return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
+
+    /** Подсветка фрагмента поиска (безопасная разметка). */
+    function buildHighlightedHtml(plainText, query) {
+        if (!plainText) return "";
+        var q = query ? String(query).trim() : "";
+        if (!q) return escapeHtml(plainText);
+        var re = new RegExp("(" + escapeRegExp(q) + ")", "gi");
+        var parts = String(plainText).split(re);
+        return parts.map(function (part, i) {
+            if (i % 2 === 1) {
+                return "<mark class=\"search-highlight\">" + escapeHtml(part) + "</mark>";
+            }
+            return escapeHtml(part);
+        }).join("");
+    }
+
+    /** Длинный текст: свёртка + подсветка; короткий: только подсветка. */
+    function applyRichValueContent(el, plainText, searchQuery) {
+        if (!el) return;
+        el.dataset.plaintext = plainText;
+        var q = searchQuery !== undefined ? searchQuery : lastResultsSearchQuery || "";
+        var maxLen = CONFIG.expandLongFieldAfter;
+        var multiline = plainText.indexOf("\n") !== -1;
+        function applyDiffStyle() {
+            if (el.dataset.differ === "1") {
+                el.style.color = "var(--highlight-red)";
+                el.style.fontWeight = "700";
+            } else {
+                el.style.color = "";
+                el.style.fontWeight = "";
+            }
+        }
+        function removeExpandControls() {
+            el.querySelectorAll(".card-value-expand-wrap").forEach(function (w) {
+                w.remove();
+            });
+        }
+        function needsLongCollapse() {
+            return plainText.length > maxLen;
+        }
+        function renderExpanded() {
+            removeExpandControls();
+            el.innerHTML = buildHighlightedHtml(plainText, q);
+            el.classList.toggle("card-value--multiline", multiline || needsLongCollapse());
+            if (needsLongCollapse() || multiline) el.classList.add("card-value--block");
+            else el.classList.remove("card-value--block");
+            applyDiffStyle();
+            if (needsLongCollapse()) {
+                var wrap = document.createElement("span");
+                wrap.className = "card-value-expand-wrap";
+                var btnCol = document.createElement("button");
+                btnCol.type = "button";
+                btnCol.className = "card-value-expand";
+                btnCol.textContent = "Свернуть";
+                btnCol.addEventListener("click", function () {
+                    renderCollapsed();
+                });
+                wrap.appendChild(btnCol);
+                el.appendChild(wrap);
+            }
+        }
+        function renderCollapsed() {
+            removeExpandControls();
+            var preview = plainText.slice(0, maxLen).trim() + "…";
+            el.innerHTML = buildHighlightedHtml(preview, q);
+            el.classList.remove("card-value--multiline", "card-value--block");
+            applyDiffStyle();
+            var wrap = document.createElement("span");
+            wrap.className = "card-value-expand-wrap";
+            var btnExp = document.createElement("button");
+            btnExp.type = "button";
+            btnExp.className = "card-value-expand";
+            btnExp.textContent = "Показать полностью";
+            btnExp.addEventListener("click", function () {
+                renderExpanded();
+            });
+            wrap.appendChild(btnExp);
+            el.appendChild(wrap);
+        }
+        if (plainText.length <= maxLen) {
+            removeExpandControls();
+            el.innerHTML = buildHighlightedHtml(plainText, q);
+            el.classList.toggle("card-value--multiline", multiline);
+            if (multiline) el.classList.add("card-value--block");
+            else el.classList.remove("card-value--block");
+            applyDiffStyle();
+            return;
+        }
+        renderCollapsed();
+    }
+
+    function isProfileCodesField(fieldKey) {
+        return fieldKey === CONFIG.profileCodesField;
+    }
+
+    function parseProfileCodesList(plainText) {
+        if (!plainText) return [];
+        var parts = String(plainText)
+            .split(/[,;\n]/)
+            .map(function (p) {
+                return p.trim();
+            })
+            .filter(Boolean);
+        var seen = new Set();
+        var out = [];
+        parts.forEach(function (p) {
+            if (seen.has(p)) return;
+            seen.add(p);
+            out.push(p);
+        });
+        return out;
+    }
+
+    /** «Код профиля тестов»: чипы, поиск и свёртка длинных списков. */
+    function applyProfileCodesFieldContent(el, plainText, searchQuery) {
+        if (!el) return;
+        el.dataset.plaintext = plainText;
+        el.dataset.fieldType = "profile-codes";
+        var q = searchQuery !== undefined ? searchQuery : lastResultsSearchQuery || "";
+        var codes = parseProfileCodesList(plainText);
+        var threshold = CONFIG.profileCodesCollapseAfter | 0;
+        var previewN = CONFIG.profileCodesPreviewCount | 0;
+        if (previewN < 1) previewN = 5;
+        var forceExpanded = el.dataset.profileCodesExpanded === "1";
+        var savedChipQ = el.dataset.profileCodesChipSearch || "";
+
+        function applyDiffStyle() {
+            if (el.dataset.differ === "1") {
+                el.style.color = "var(--highlight-red)";
+                el.style.fontWeight = "700";
+            } else {
+                el.style.color = "";
+                el.style.fontWeight = "";
+            }
+        }
+
+        function highlightCode(code, highlightQuery) {
+            var hq = highlightQuery ? String(highlightQuery).trim() : "";
+            if (!hq) return escapeHtml(code);
+            var re = new RegExp("(" + escapeRegExp(hq) + ")", "gi");
+            var parts = String(code).split(re);
+            return parts
+                .map(function (part, i) {
+                    if (i % 2 === 1) {
+                        return "<mark class=\"search-highlight\">" + escapeHtml(part) + "</mark>";
+                    }
+                    return escapeHtml(part);
+                })
+                .join("");
+        }
+
+        function makeChip(code, highlightQuery) {
+            var chip = document.createElement("span");
+            chip.className = "profile-chip";
+            chip.dataset.code = code;
+            chip.innerHTML = highlightCode(code, highlightQuery);
+            return chip;
+        }
+
+        el.innerHTML = "";
+        el.classList.add("card-value--block");
+        applyDiffStyle();
+
+        if (codes.length === 0) {
+            el.textContent = "";
+            return;
+        }
+
+        if (codes.length <= threshold) {
+            var wrapShort = document.createElement("div");
+            wrapShort.className = "profile-codes-wrap";
+            var chipsShort = document.createElement("div");
+            chipsShort.className = "profile-codes-chips";
+            codes.forEach(function (code) {
+                chipsShort.appendChild(makeChip(code, q));
+            });
+            wrapShort.appendChild(chipsShort);
+            el.appendChild(wrapShort);
+            return;
+        }
+
+        var wrap = document.createElement("div");
+        wrap.className = "profile-codes-wrap";
+
+        if (!forceExpanded) {
+            var summary = document.createElement("div");
+            summary.className = "profile-codes-summary";
+            summary.textContent = "Кодов профиля: " + codes.length;
+            wrap.appendChild(summary);
+            var preview = document.createElement("div");
+            preview.className = "profile-codes-chips";
+            codes.slice(0, previewN).forEach(function (code) {
+                preview.appendChild(makeChip(code, q));
+            });
+            wrap.appendChild(preview);
+            if (codes.length > previewN) {
+                var more = document.createElement("span");
+                more.className = "profile-codes-summary";
+                more.textContent = "и ещё " + (codes.length - previewN) + "…";
+                wrap.appendChild(more);
+            }
+            var actionsCol = document.createElement("div");
+            actionsCol.className = "profile-codes-actions";
+            var btnShow = document.createElement("button");
+            btnShow.type = "button";
+            btnShow.className = "profile-codes-btn";
+            btnShow.textContent = "Показать все коды";
+            btnShow.addEventListener("click", function () {
+                el.dataset.profileCodesExpanded = "1";
+                applyProfileCodesFieldContent(el, plainText, q);
+            });
+            actionsCol.appendChild(btnShow);
+            wrap.appendChild(actionsCol);
+            el.appendChild(wrap);
+            return;
+        }
+
+        var toolbar = document.createElement("div");
+        toolbar.className = "profile-codes-toolbar";
+        var searchInp = document.createElement("input");
+        searchInp.type = "search";
+        searchInp.className = "profile-codes-search-input";
+        searchInp.placeholder = "Поиск среди кодов…";
+        searchInp.value = savedChipQ;
+        searchInp.setAttribute("aria-label", "Поиск кода профиля в карточке");
+        var meta = document.createElement("span");
+        meta.className = "profile-codes-meta";
+        toolbar.appendChild(searchInp);
+        toolbar.appendChild(meta);
+        wrap.appendChild(toolbar);
+
+        var chipsAll = document.createElement("div");
+        chipsAll.className = "profile-codes-chips";
+
+        function renderChips() {
+            var chipQ = searchInp.value.trim().toLowerCase();
+            el.dataset.profileCodesChipSearch = searchInp.value;
+            chipsAll.innerHTML = "";
+            var visible = 0;
+            codes.forEach(function (code) {
+                var matchChip = !chipQ || code.toLowerCase().indexOf(chipQ) !== -1;
+                if (!matchChip) return;
+                visible++;
+                chipsAll.appendChild(makeChip(code, q || chipQ));
+            });
+            meta.textContent =
+                chipQ && visible < codes.length
+                    ? visible + " из " + codes.length
+                    : codes.length + " кодов";
+            chipsAll.style.display = visible ? "flex" : "none";
+        }
+
+        searchInp.addEventListener("input", renderChips);
+        wrap.appendChild(chipsAll);
+
+        var actions = document.createElement("div");
+        actions.className = "profile-codes-actions";
+        var btnHide = document.createElement("button");
+        btnHide.type = "button";
+        btnHide.className = "profile-codes-btn";
+        btnHide.textContent = "Свернуть";
+        btnHide.addEventListener("click", function () {
+            el.dataset.profileCodesExpanded = "0";
+            el.dataset.profileCodesChipSearch = "";
+            applyProfileCodesFieldContent(el, plainText, q);
+        });
+        var btnCopy = document.createElement("button");
+        btnCopy.type = "button";
+        btnCopy.className = "profile-codes-btn";
+        btnCopy.textContent = "Копировать все";
+        btnCopy.addEventListener("click", function () {
+            var text = codes.join("\n");
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text);
+            }
+        });
+        actions.appendChild(btnHide);
+        actions.appendChild(btnCopy);
+        wrap.appendChild(actions);
+
+        el.appendChild(wrap);
+        renderChips();
+    }
+
+    function saveFiltersState() {
+        try {
+            var draft = {};
+            var applied = {};
+            for (var col in selectedFilters) {
+                draft[col] = Array.from(selectedFilters[col] || []);
+            }
+            for (var c in appliedFilters) {
+                applied[c] = Array.from(appliedFilters[c] || []);
+            }
+            localStorage.setItem(
+                CONFIG.filtersStorageKey,
+                JSON.stringify({ draft: draft, applied: applied, v: 2 })
+            );
+        } catch (e) {}
+    }
+
+    function restoreFiltersState() {
+        try {
+            var raw = localStorage.getItem(CONFIG.filtersStorageKey);
+            if (!raw) return;
+            var o = JSON.parse(raw);
+            var draft = o.v === 2 ? o.draft : o;
+            var applied = o.v === 2 ? o.applied : o;
+            CONFIG.filters.forEach(function (col) {
+                if (!selectedFilters[col]) selectedFilters[col] = new Set();
+                if (!appliedFilters[col]) appliedFilters[col] = new Set();
+                selectedFilters[col].clear();
+                appliedFilters[col].clear();
+                if (draft && Array.isArray(draft[col])) {
+                    draft[col].forEach(function (v) {
+                        selectedFilters[col].add(v);
+                    });
+                }
+                if (applied && Array.isArray(applied[col])) {
+                    applied[col].forEach(function (v) {
+                        appliedFilters[col].add(v);
+                    });
+                }
+                var dd = document.getElementById("drop_" + sanitizeId(col));
+                if (dd) {
+                    dd.querySelectorAll(".dropdown-item input[type=checkbox]").forEach(function (cb) {
+                        cb.checked = selectedFilters[col].has(cb.value);
+                    });
+                }
+                updateFilterSelectionClearUi(col);
+                updateFilterInputSelectionUi(col);
+            });
+            updateApplyButtonUi();
+        } catch (e) {}
+    }
+
+    function clearOneFilter(filterCol) {
+        if (!selectedFilters[filterCol]) return;
+        selectedFilters[filterCol].clear();
+        var dd = document.getElementById("drop_" + sanitizeId(filterCol));
+        if (dd) {
+            dd.querySelectorAll(".dropdown-item input[type=checkbox]").forEach(function (cb) {
+                cb.checked = false;
+            });
+        }
+        var inp = document.querySelector('.filter-search-input[data-filter-col="' + sanitizeId(filterCol) + '"]');
+        if (inp) {
+            inp.placeholder = "Выбрать варианты (0)";
+            inp.value = "";
+            if (dd) renderFilterDropdown(dd, filterCol, inp, "");
+        }
+        updateFilterSelectionClearUi(filterCol);
+        updateFilterInputSelectionUi(filterCol);
+        saveFiltersState();
+        updateCascadeDropdowns();
+        updateApplyButtonUi();
+    }
+
+    function removeOneFilterValue(filterCol, value) {
+        if (!filterCol || value === undefined) return;
+        if (selectedFilters[filterCol]) selectedFilters[filterCol].delete(value);
+        if (appliedFilters[filterCol]) appliedFilters[filterCol].delete(value);
+        syncCheckboxForFilterValue(filterCol, value, false);
+        updateFilterSelectionClearUi(filterCol);
+        updateFilterInputSelectionUi(filterCol);
+        saveFiltersState();
+        updateCascadeDropdowns();
+        applyFiltersAndRender();
+    }
+
+    function updateFilterSelectionClearUi(filterCol) {
+        if (!filterCol || !selectedFilters[filterCol]) return;
+        var btn = document.querySelector(
+            '.filter-selection-clear[data-filter-col="' + sanitizeId(filterCol) + '"]'
+        );
+        if (!btn) return;
+        btn.style.display = selectedFilters[filterCol].size > 0 ? "flex" : "none";
+    }
+
+    function updateFilterInputSelectionUi(filterCol) {
+        if (!filterCol) return;
+        var count = selectedFilters[filterCol] ? selectedFilters[filterCol].size : 0;
+        var sid = sanitizeId(filterCol);
+        var inp = document.querySelector('.filter-search-input[data-filter-col="' + sid + '"]');
+        var badge = document.querySelector('.filter-selection-count[data-filter-col="' + sid + '"]');
+        if (badge) {
+            if (count > 0) {
+                badge.textContent = String(count);
+                badge.classList.add("visible");
+                badge.setAttribute("title", "Выбрано вариантов: " + count);
+                badge.setAttribute("aria-label", "Выбрано вариантов: " + count);
+            } else {
+                badge.textContent = "";
+                badge.classList.remove("visible");
+                badge.removeAttribute("title");
+                badge.removeAttribute("aria-label");
+            }
+        }
+        if (inp) {
+            inp.classList.toggle("has-selection-count", count > 0);
+            if (!inp.value.trim()) {
+                inp.placeholder =
+                    count > 0 ? "Выбрано вариантов: " + count : "Выбрать варианты (0)";
+            }
+        }
+    }
+
+    function updateAllFilterSelectionClearUi() {
+        CONFIG.filters.forEach(function (col) {
+            updateFilterSelectionClearUi(col);
+            updateFilterInputSelectionUi(col);
+        });
+    }
+
+    function getProfileCodeFromTestObj(testObj, splitCol) {
+        var profileCol =
+            (CONFIG.cardGroupByColumns && CONFIG.cardGroupByColumns.length
+                ? CONFIG.cardGroupByColumns[0]
+                : "Код профиля тестов");
+        if (testObj.groupMatch && testObj.groupMatch[profileCol] !== undefined) {
+            return String(testObj.groupMatch[profileCol]).trim() || "Не заполнено";
+        }
+        if (testObj.params && testObj.params[profileCol]) {
+            return String(testObj.params[profileCol]).trim() || "Не заполнено";
+        }
+        return "Не заполнено";
+    }
+
+    function getTestProfileKey(testName, groupMatch, splitCol) {
+        var parts = [splitCol + "\u0002" + String(testName || "").trim()];
+        (CONFIG.cardGroupByColumns || []).forEach(function (col) {
+            if (col === splitCol) return;
+            if (!CONFIG.showProfilesInCards) return;
+            var v = groupMatch && groupMatch[col];
+            parts.push(
+                col + "\u0002" + (v !== undefined && v !== null ? String(v).trim() : "Не заполнено")
+            );
+        });
+        return parts.join("\u0001");
+    }
+
+    function mergeCardParamsFields(targetParams, sourceParams) {
+        if (!sourceParams) return;
+        for (var k in sourceParams) {
+            if (!Object.prototype.hasOwnProperty.call(sourceParams, k)) continue;
+            var sv = sourceParams[k];
+            if (sv === undefined || String(sv).trim() === "") continue;
+            if (!targetParams[k] || String(targetParams[k]).trim() === "") {
+                targetParams[k] = sv;
+                continue;
+            }
+            if (String(targetParams[k]).trim() === String(sv).trim()) continue;
+            var sep = CONFIG.multiRowValueSep;
+            var set = new Set();
+            String(targetParams[k])
+                .split(sep)
+                .map(function (x) {
+                    return String(x).trim();
+                })
+                .filter(Boolean)
+                .forEach(function (x) {
+                    set.add(x);
+                });
+            String(sv)
+                .split(sep)
+                .map(function (x) {
+                    return String(x).trim();
+                })
+                .filter(Boolean)
+                .forEach(function (x) {
+                    set.add(x);
+                });
+            targetParams[k] = Array.from(set)
+                .sort(function (a, b) {
+                    return a.localeCompare(b, "ru", { numeric: true });
+                })
+                .join(sep);
+        }
+    }
+
+    function dedupeTestListByTestProfile(testList, splitCol) {
+        var map = new Map();
+        testList.forEach(function (obj) {
+            var key = getTestProfileKey(obj.testName, obj.groupMatch, splitCol);
+            if (!map.has(key)) {
+                map.set(key, {
+                    testName: obj.testName,
+                    groupMatch: obj.groupMatch,
+                    params: Object.assign({}, obj.params)
+                });
+            } else {
+                mergeCardParamsFields(map.get(key).params, obj.params);
+            }
+        });
+        return Array.from(map.values());
+    }
+
+    /** Сигнатура содержимого карточки (без имени теста) — для слияния полных дублей. */
+    function getTestObjContentSignature(testObj, splitCol, displayList) {
+        return displayList
+            .map(function (displayItem) {
+                return getDisplaySpec(displayItem);
+            })
+            .filter(function (spec) {
+                return spec.key !== splitCol;
+            })
+            .map(function (spec) {
+                return spec.key + ":::" + String((testObj.params && testObj.params[spec.key]) || "").trim();
+            })
+            .join("|||");
+    }
+
+    function dedupeTestListExact(testList, splitCol, displayList) {
+        var seen = new Set();
+        var out = [];
+        testList.forEach(function (obj) {
+            var k =
+                getTestProfileKey(obj.testName, obj.groupMatch, splitCol) +
+                "\u0002" +
+                getTestObjContentSignature(obj, splitCol, displayList);
+            if (seen.has(k)) return;
+            seen.add(k);
+            out.push(obj);
+        });
+        return out;
+    }
+
+    function getFinalCardDedupeKey(cardObj, splitCol) {
+        var gmTest = cardObj.groupMatch && cardObj.groupMatch[splitCol];
+        var testPart;
+        if (cardObj.testKeys && cardObj.testKeys.length > 1) {
+            testPart = cardObj.testKeys
+                .slice()
+                .sort(function (a, b) {
+                    return a.localeCompare(b, "ru", { numeric: true });
+                })
+                .join("\u0002");
+        } else if (gmTest !== undefined && gmTest !== null && String(gmTest).trim() !== "") {
+            testPart = String(gmTest).trim();
+        } else if (cardObj.testKeys && cardObj.testKeys.length === 1) {
+            testPart = String(cardObj.testKeys[0]).trim();
+        } else {
+            testPart = String(cardObj.headerTitle || "").trim();
+        }
+        return getTestProfileKey(testPart, cardObj.groupMatch, splitCol);
+    }
+
+    function dedupeFinalCardsByTestProfile(cards, splitCol) {
+        var map = new Map();
+        cards.forEach(function (card) {
+            var key = getFinalCardDedupeKey(card, splitCol);
+            if (!map.has(key)) {
+                map.set(key, {
+                    headerTitle: card.headerTitle,
+                    testKeys: card.testKeys ? card.testKeys.slice() : [card.headerTitle],
+                    groupMatch: card.groupMatch,
+                    params: Object.assign({}, card.params)
+                });
+            } else {
+                var existing = map.get(key);
+                mergeCardParamsFields(existing.params, card.params);
+            }
+        });
+        return Array.from(map.values());
+    }
+
+    function getRowCardGroupParts(row, splitCol) {
+        var testVal = getRowValue(row, splitCol);
+        if (testVal === undefined || String(testVal).trim() === "") testVal = "Не заполнено";
+        else testVal = String(testVal).trim();
+
+        var groupMatch = {};
+        groupMatch[splitCol] = testVal;
+
+        var keyParts = [splitCol + "\u0002" + testVal];
+        (CONFIG.cardGroupByColumns || []).forEach(function (col) {
+            if (col === splitCol) return;
+            var v = getRowValue(row, col);
+            if (v === undefined || String(v).trim() === "") v = "Не заполнено";
+            else v = String(v).trim();
+            groupMatch[col] = v;
+            keyParts.push(col + "\u0002" + v);
+        });
+
+        return {
+            key: keyParts.join("\u0001"),
+            testName: testVal,
+            groupMatch: groupMatch
+        };
+    }
+
+    function rowMatchesCardGroup(row, groupMatch, splitCol) {
+        if (!groupMatch) return true;
+        for (var col in groupMatch) {
+            if (!Object.prototype.hasOwnProperty.call(groupMatch, col)) continue;
+            var expected = String(groupMatch[col]).trim();
+            var rv = getRowValue(row, col);
+            if (isListSplittableColumn(col)) {
+                if (splitListCellValue(rv, col).indexOf(expected) === -1) return false;
+            } else {
+                if (rv === undefined || String(rv).trim() === "") rv = "Не заполнено";
+                else rv = String(rv).trim();
+                if (rv !== expected) return false;
+            }
+        }
+        return true;
+    }
+
+    document.getElementById("filterSummaryBar").addEventListener("click", function (e) {
+        var chip = e.target.closest(".filter-summary-chip");
+        if (chip && chip.dataset.filterCol !== undefined && chip.dataset.filterVal !== undefined) {
+            e.preventDefault();
+            removeOneFilterValue(chip.dataset.filterCol, chip.dataset.filterVal);
+        }
+    });
+
+    function updateFilterSummaryBar() {
+        var bar = document.getElementById("filterSummaryBar");
+        if (!bar) return;
+        var parts = [];
+        for (var i = 0; i < CONFIG.filters.length; i++) {
+            var col = CONFIG.filters[i];
+            if (!appliedFilters[col] || appliedFilters[col].size === 0) continue;
+            var vals = Array.from(appliedFilters[col]).sort(function (a, b) {
+                return String(a).localeCompare(String(b), "ru", { numeric: true });
+            });
+            var chips = vals
+                .map(function (v) {
+                    return (
+                        '<button type="button" class="filter-summary-chip" data-filter-col="' +
+                        escapeAttr(col) +
+                        '" data-filter-val="' +
+                        escapeAttr(v) +
+                        '" title="Нажмите, чтобы убрать из фильтра">' +
+                        escapeHtml(v) +
+                        '<span class="filter-summary-chip-x" aria-hidden="true">×</span></button>'
+                    );
+                })
+                .join(" ");
+            parts.push(
+                '<span class="filter-summary-group"><strong>' + escapeHtml(col) + "</strong>: " + chips + "</span>"
+            );
+        }
+        if (parts.length === 0) {
+            bar.classList.remove("visible");
+            bar.innerHTML = "";
+            return;
+        }
+        bar.classList.add("visible");
+        bar.innerHTML =
+            '<span class="filter-summary-inner">Активные фильтры: ' + parts.join(" &nbsp;|&nbsp; ") + "</span>";
+    }
+
+    function updateColumnWarnings() {
+        var el = document.getElementById("columnWarning");
+        if (!el) return;
+        var missing = [];
+        CONFIG.requiredColumns.forEach(function (col) {
+            if (!columnExistsInDataset(col)) missing.push(col);
+        });
+        if (missing.length === 0) {
+            el.classList.remove("visible");
+            el.innerHTML = "";
+            return;
+        }
+        el.classList.add("visible");
+        el.innerHTML =
+            "В данных не найдены ожидаемые столбцы: <strong>" +
+            missing.map(escapeHtml).join(", ") +
+            "</strong>. Проверьте файл или выберите другой лист Excel.";
+    }
+
+    function loadWorkbookIntoUI(workbook, fileLabel) {
+        pendingWorkbook = workbook;
+        lastLoadedFileName = fileLabel || "";
+        var picker = document.getElementById("sheetPicker");
+        var sel = document.getElementById("sheetSelect");
+        if (!picker || !sel) {
+            applySheetFromWorkbook(workbook.SheetNames && workbook.SheetNames[0]);
+            return;
+        }
+        var names = workbook.SheetNames || [];
+        if (names.length <= 1) {
+            picker.classList.remove("visible");
+            applySheetFromWorkbook(names[0] || null);
+            return;
+        }
+        picker.classList.add("visible");
+        sel.innerHTML = names
+            .map(function (n) {
+                return "<option>" + escapeHtml(n) + "</option>";
+            })
+            .join("");
+        try {
+            var sk = "invitro_sheet_" + fileLabel;
+            var saved = sessionStorage.getItem(sk);
+            if (saved && names.indexOf(saved) >= 0) sel.value = saved;
+        } catch (e) {}
+        sel.onchange = function () {
+            try {
+                sessionStorage.setItem("invitro_sheet_" + fileLabel, sel.value);
+            } catch (e) {}
+            applySheetFromWorkbook(sel.value);
+        };
+        applySheetFromWorkbook(sel.value);
+    }
+
+    function applySheetFromWorkbook(sheetName) {
+        if (!pendingWorkbook || !sheetName) return;
+        var ws = pendingWorkbook.Sheets[sheetName];
+        if (!ws) return;
+        var statusEl = document.getElementById("status");
+        var loadToken = ++sheetLoadToken;
+        try {
+            setSheetHeaderFromWorksheet(ws);
+            if (statusEl) statusEl.innerText = "Загрузка строк листа…";
+            globalData = XLSX.utils.sheet_to_json(ws, { defval: "", blankrows: false, raw: true });
+            pendingWorkbook = null;
+            buildRowColumnCache(globalData[0]);
+            applyLargeFileDefaults();
+            if (statusEl) {
+                statusEl.innerText =
+                    globalData.length > CONFIG.largeFileRowThreshold
+                        ? "Справочник для фильтров: 0 / " + globalData.length + " строк…"
+                        : "Справочник для фильтров: " + globalData.length + " строк…";
+            }
+            rebuildFilterUniquesIndex(function () {
+                if (loadToken !== sheetLoadToken) return;
+                try {
+                    updateColumnWarnings();
+                    refreshActiveDisplay();
+                    buildControls();
+                    if (globalData.length >= CONFIG.largeFileRowThreshold) {
+                        for (var col in selectedFilters) {
+                            if (selectedFilters[col]) selectedFilters[col].clear();
+                        }
+                        for (var col in appliedFilters) {
+                            if (appliedFilters[col]) appliedFilters[col].clear();
+                        }
+                    } else {
+                        restoreFiltersState();
+                    }
+                    updateCascadeAndResults();
+                    if (statusEl) {
+                        if (globalData.length >= CONFIG.largeFileRowThreshold) {
+                            statusEl.innerText =
+                                "Загружено " +
+                                globalData.length +
+                                " строк. «Группы тестов» включены для скорости. Выберите узкий фильтр.";
+                        } else {
+                            statusEl.innerText =
+                                "Успешно! Загружено строк: " +
+                                globalData.length +
+                                ". Выберите фильтры для поиска.";
+                        }
+                    }
+                } catch (innerErr) {
+                    if (statusEl) {
+                        statusEl.innerText =
+                            "Ошибка после загрузки: " +
+                            (innerErr && innerErr.message ? innerErr.message : String(innerErr));
+                    }
+                    globalData = [];
+                    filterUniquesIndex = null;
+                    filterRowIndex = null;
+                    buildControls();
+                }
+            });
+        } catch (err) {
+            if (statusEl) {
+                statusEl.innerText =
+                    "Ошибка обработки листа: " + (err && err.message ? err.message : String(err));
+            }
+            globalData = [];
+            filterUniquesIndex = null;
+            filterRowIndex = null;
+            pendingWorkbook = null;
+            buildControls();
+        }
+    }
+
+    function buildFirstCardBaseline(finalCards, displayList, splitCol) {
+        var firstCardValues = {};
+        if (!finalCards.length) return firstCardValues;
+        displayList.forEach(function (displayItem) {
+            var spec = getDisplaySpec(displayItem);
+            if (spec.key === splitCol) return;
+            firstCardValues[spec.key] = finalCards[0].params[spec.key] || "";
+        });
+        return firstCardValues;
+    }
+
+    function appendRenderedCardsChunk(container, finalCards, displayList, splitCol, firstCardValues, startIdx, endIdx) {
+        var frag = document.createDocumentFragment();
+        for (var i = startIdx; i < endIdx; i++) {
+            frag.appendChild(createCardElement(finalCards[i], i, splitCol, displayList, firstCardValues));
+        }
+        container.appendChild(frag);
+    }
+
+    function finishResultsRender(container, metaInfo) {
+        container.appendChild(metaInfo);
+        applyResultsSearch();
+    }
+
+    function startLazyCardRender(container, finalCards, displayList, splitCol, filteredData, firstCardValues, batchSize) {
+        var total = finalCards.length;
+        disconnectLazyObserver();
+        var batch = Math.max(1, batchSize);
+        var pos = Math.min(batch, total);
+        appendRenderedCardsChunk(container, finalCards, displayList, splitCol, firstCardValues, 0, pos);
+
+        var metaInfo = document.createElement("div");
+        metaInfo.className = "meta-info";
+        metaInfo.id = "resultsMetaLine";
+        metaInfo.dataset.totalCards = String(total);
+        metaInfo.dataset.filterRows = String(filteredData.length);
+
+        if (pos >= total) {
+            finishResultsRender(container, metaInfo);
+            return;
+        }
+
+        var sentinel = document.createElement("div");
+        sentinel.className = "lazy-sentinel";
+        sentinel.id = "lazyRenderSentinel";
+        sentinel.setAttribute("aria-hidden", "true");
+        container.appendChild(sentinel);
+
+        lazyRenderState = {
+            finalCards: finalCards,
+            displayList: displayList,
+            splitCol: splitCol,
+            filteredData: filteredData,
+            firstCardValues: firstCardValues,
+            nextIndex: pos,
+            batchSize: batch,
+            metaInfo: metaInfo,
+            container: container
+        };
+
+        lazyObserver = new IntersectionObserver(
+            function (entries) {
+                entries.forEach(function (entry) {
+                    if (!entry.isIntersecting || !lazyRenderState) return;
+                    var st = lazyRenderState;
+                    var nxt = st.nextIndex;
+                    if (nxt >= st.finalCards.length) return;
+                    var end = Math.min(nxt + st.batchSize, st.finalCards.length);
+                    appendRenderedCardsChunk(st.container, st.finalCards, st.displayList, st.splitCol, st.firstCardValues, nxt, end);
+                    st.nextIndex = end;
+                    applyResultsSearch();
+                    if (st.nextIndex >= st.finalCards.length) {
+                        var sen = document.getElementById("lazyRenderSentinel");
+                        if (sen) sen.remove();
+                        var meta = st.metaInfo;
+                        disconnectLazyObserver();
+                        lazyRenderState = null;
+                        finishResultsRender(st.container, meta);
+                    }
+                });
+            },
+            { root: null, rootMargin: "200px", threshold: 0 }
+        );
+        lazyObserver.observe(sentinel);
+        applyResultsSearch();
+    }
+
+    function rebuildToc(finalCards) {
+        var nav = document.getElementById("tocSidebar");
+        if (!nav) return;
+        if (!finalCards || finalCards.length < CONFIG.tocMinCards) {
+            nav.classList.remove("visible");
+            nav.innerHTML = "";
+            return;
+        }
+        nav.classList.add("visible");
+        var h = document.createElement("h4");
+        h.textContent = "К карточкам";
+        nav.innerHTML = "";
+        nav.appendChild(h);
+        finalCards.forEach(function (fc, i) {
+            var a = document.createElement("a");
+            a.href = "#card-" + i;
+            var t = fc.headerTitle || "";
+            a.textContent = t.length > 70 ? t.slice(0, 67) + "…" : t;
+            nav.appendChild(a);
+        });
+    }
+
+    function disconnectLazyObserver() {
+        if (lazyObserver) {
+            lazyObserver.disconnect();
+            lazyObserver = null;
+        }
+        lazyRenderState = null;
+        var sen = document.getElementById("lazyRenderSentinel");
+        if (sen) sen.remove();
+    }
+
+    function createCardElement(cardObj, index, splitCol, displayList, firstCardValues) {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.id = "card-" + index;
+        card.dataset.cardIndex = String(index);
+        if (cardObj.testKeys && cardObj.testKeys.length) {
+            card.dataset.testKeysJson = JSON.stringify(cardObj.testKeys);
+        }
+        if (cardObj.groupMatch) {
+            card.dataset.groupMatchJson = JSON.stringify(cardObj.groupMatch);
+        }
+
+        const headerWrap = document.createElement("div");
+        headerWrap.className = "card-header-row";
+
+        const headerFieldDiv = document.createElement("div");
+        headerFieldDiv.className = "card-field full-width-header";
+        headerFieldDiv.style.flex = "1";
+        headerFieldDiv.style.minWidth = "0";
+
+        const headerLabelDiv = document.createElement("div");
+        headerLabelDiv.className = "card-label";
+        headerLabelDiv.innerText = splitCol;
+
+        const headerValDiv = document.createElement("div");
+        headerValDiv.className = "card-value";
+        applyRichValueContent(headerValDiv, cardObj.headerTitle, lastResultsSearchQuery);
+
+        headerFieldDiv.appendChild(headerLabelDiv);
+        headerFieldDiv.appendChild(headerValDiv);
+
+        const actions = document.createElement("div");
+        actions.className = "card-actions";
+        const selectCb = document.createElement("input");
+        selectCb.type = "checkbox";
+        selectCb.className = "card-select-cb";
+        selectCb.title = "Выбрать для экспорта (HTML/Excel). Для сравнения отметьте ровно две карточки.";
+        selectCb.dataset.cardIndex = String(index);
+        selectCb.addEventListener("change", onCardSelectChange);
+        const copyBtn = document.createElement("button");
+        copyBtn.type = "button";
+        copyBtn.className = "btn-card-mini";
+        copyBtn.textContent = "Копировать";
+        copyBtn.addEventListener("click", function () {
+            copyCardAsText(cardObj, splitCol, displayList);
+        });
+        actions.appendChild(selectCb);
+        actions.appendChild(copyBtn);
+
+        headerWrap.appendChild(headerFieldDiv);
+        headerWrap.appendChild(actions);
+        card.appendChild(headerWrap);
+
+        displayList.forEach(function (displayItem) {
+            const spec = getDisplaySpec(displayItem);
+            if (spec.key === splitCol) return;
+
+            let joinedText = cardObj.params[spec.key] || "";
+            if (joinedText !== "") {
+                const fieldDiv = document.createElement("div");
+                fieldDiv.className = "card-field";
+
+                const labelDiv = document.createElement("div");
+                labelDiv.className = "card-label";
+                labelDiv.innerText = spec.label;
+
+                const valDiv = document.createElement("div");
+                valDiv.className = "card-value";
+                var diff =
+                    index > 0 &&
+                    CONFIG.highlightDifferences &&
+                    joinedText !== firstCardValues[spec.key];
+                valDiv.dataset.differ = diff ? "1" : "0";
+                if (isProfileCodesField(spec.key)) {
+                    fieldDiv.classList.add("card-field--profile-codes");
+                    applyProfileCodesFieldContent(valDiv, joinedText, lastResultsSearchQuery);
+                } else {
+                    applyRichValueContent(valDiv, joinedText, lastResultsSearchQuery);
+                }
+
+                fieldDiv.appendChild(labelDiv);
+                fieldDiv.appendChild(valDiv);
+                card.appendChild(fieldDiv);
+            }
+        });
+
+        return card;
+    }
+
+    function copyCardAsText(cardObj, splitCol, displayList) {
+        var lines = [splitCol + ": " + cardObj.headerTitle, ""];
+        displayList.forEach(function (displayItem) {
+            var spec = getDisplaySpec(displayItem);
+            if (spec.key === splitCol) return;
+            var v = cardObj.params[spec.key];
+            if (!v) return;
+            lines.push(spec.label + ":\n" + v + "\n");
+        });
+        var text = lines.join("\n");
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).catch(function () {
+                alert("Не удалось скопировать в буфер.");
+            });
+        } else {
+            alert(text);
+        }
+    }
+
+    /** Индексы карточек для панели сравнения: заполняется только когда отмечено ровно две карточки. */
+    var compareSelected = [];
+
+    function onCardSelectChange() {
+        var checked = [];
+        document.querySelectorAll(".card-select-cb:checked").forEach(function (cb) {
+            checked.push(parseInt(cb.dataset.cardIndex, 10));
+        });
+        checked.sort(function (a, b) {
+            return a - b;
+        });
+        compareSelected = checked.length === 2 ? checked : [];
+        updateComparePanel();
+    }
+
+    function getSelectedCardIndicesForExport() {
+        var out = [];
+        document.querySelectorAll("#resultsContainer .card-select-cb:checked").forEach(function (cb) {
+            out.push(parseInt(cb.dataset.cardIndex, 10));
+        });
+        return out.sort(function (a, b) {
+            return a - b;
+        });
+    }
+
+    function rowKeysFromCardElement(cardEl) {
+        if (!cardEl) return [];
+        if (cardEl.dataset.testKeysJson) {
+            try {
+                var parsed = JSON.parse(cardEl.dataset.testKeysJson);
+                if (Array.isArray(parsed)) {
+                    return parsed
+                        .map(function (t) {
+                            return String(t).trim();
+                        })
+                        .filter(Boolean);
+                }
+            } catch (e) {}
+        }
+        var headerVal = cardEl.querySelector(".card-field.full-width-header .card-value");
+        if (!headerVal || !headerVal.dataset.plaintext) return [];
+        return String(headerVal.dataset.plaintext)
+            .split(/[\n,]+/)
+            .map(function (x) {
+                return x.trim();
+            })
+            .filter(Boolean);
+    }
+
+    function updateComparePanel() {
+        var panel = document.getElementById("comparePanel");
+        var body = document.getElementById("comparePanelBody");
+        if (!panel || !body || !lastRenderContext) return;
+        if (compareSelected.length !== 2) {
+            panel.classList.remove("visible");
+            body.innerHTML = "";
+            return;
+        }
+        var i0 = compareSelected[0];
+        var i1 = compareSelected[1];
+        var c0 = lastRenderContext.finalCards[i0];
+        var c1 = lastRenderContext.finalCards[i1];
+        if (!c0 || !c1) return;
+        var keys = [];
+        var keySet = {};
+        lastRenderContext.displayList.forEach(function (item) {
+            var spec = getDisplaySpec(item);
+            if (spec.key === lastRenderContext.splitCol) return;
+            keySet[spec.key] = spec.label;
+        });
+        for (var k in keySet) keys.push(k);
+
+        var html =
+            "<table><thead><tr><th>Поле</th><th>Тест 1</th><th>Тест 2</th></tr></thead><tbody>";
+        keys.forEach(function (key) {
+            var v0 = (c0.params[key] || "").trim();
+            var v1 = (c1.params[key] || "").trim();
+            var diff = v0 !== v1;
+            html +=
+                "<tr" +
+                (diff ? ' class="diff"' : "") +
+                "><td>" +
+                escapeHtml(keySet[key] || key) +
+                "</td><td>" +
+                escapeHtml(v0).replace(/\n/g, "<br>") +
+                "</td><td>" +
+                escapeHtml(v1).replace(/\n/g, "<br>") +
+                "</td></tr>";
+        });
+        html += "</tbody></table>";
+        body.innerHTML =
+            "<p><strong>1:</strong> " +
+            escapeHtml(c0.headerTitle) +
+            "</p><p><strong>2:</strong> " +
+            escapeHtml(c1.headerTitle) +
+            "</p>" +
+            html;
+        panel.classList.add("visible");
+    }
+
+    document.getElementById("comparePanelClose").addEventListener("click", function () {
+        document.getElementById("comparePanel").classList.remove("visible");
+        document.querySelectorAll(".card-select-cb").forEach(function (cb) {
+            cb.checked = false;
+        });
+        compareSelected = [];
+    });
+
+    document.getElementById("scrollTopBtn").addEventListener("click", function () {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+    window.addEventListener("scroll", function () {
+        if (scrollTopTicking) return;
+        scrollTopTicking = true;
+        requestAnimationFrame(function () {
+            scrollTopTicking = false;
+            var btn = document.getElementById("scrollTopBtn");
+            if (!btn) return;
+            btn.classList.toggle("visible", window.scrollY > 320);
+        });
+    });
+
+    function updateResultsMetaLine() {
+        var el = document.getElementById("resultsMetaLine");
+        if (!el) return;
+        var total = parseInt(el.dataset.totalCards || "0", 10);
+        var rows = parseInt(el.dataset.filterRows || "0", 10);
+        var inp = document.getElementById("resultsSearchInput");
+        var q = inp && inp.value ? inp.value.trim() : "";
+        var visible = total;
+        if (q) {
+            visible = document.querySelectorAll("#resultsContainer .card:not(.filtered-out)").length;
+        }
+        var base = "Сформировано карточек: " + total + " (на основе " + rows + " строк(и)).";
+        if (q) base += " По поиску показано: " + visible + " из " + total + ".";
+        el.textContent = base;
+        var pill = document.getElementById("resultsCountPill");
+        if (pill) {
+            pill.textContent = q ? visible + " из " + total + " карточек" : total ? total + " карточек" : "";
+        }
+    }
+
+    function collectResultsSearchMarks() {
+        resultsSearchMarks = [];
+        document
+            .querySelectorAll("#resultsContainer .card:not(.filtered-out) mark.search-highlight")
+            .forEach(function (m) {
+                resultsSearchMarks.push(m);
+            });
+        resultsSearchActiveIndex = resultsSearchMarks.length ? 0 : -1;
+    }
+
+    function updateResultsSearchMatchUi(scrollToActive) {
+        var nav = document.getElementById("resultsSearchNav");
+        var counter = document.getElementById("resultsSearchMatchCounter");
+        var q = lastResultsSearchQuery ? String(lastResultsSearchQuery).trim() : "";
+        if (nav) nav.classList.toggle("visible", !!q);
+        var total = resultsSearchMarks.length;
+        if (counter) {
+            if (!q) counter.textContent = "";
+            else if (total === 0) counter.textContent = "0 из 0";
+            else counter.textContent = resultsSearchActiveIndex + 1 + " из " + total;
+        }
+        resultsSearchMarks.forEach(function (m, i) {
+            m.classList.toggle("search-highlight--current", i === resultsSearchActiveIndex);
+        });
+        var prevBtn = document.getElementById("resultsSearchPrev");
+        var nextBtn = document.getElementById("resultsSearchNext");
+        var disableNav = total <= 1;
+        if (prevBtn) prevBtn.disabled = disableNav;
+        if (nextBtn) nextBtn.disabled = disableNav;
+        if (scrollToActive && resultsSearchActiveIndex >= 0 && resultsSearchMarks[resultsSearchActiveIndex]) {
+            resultsSearchMarks[resultsSearchActiveIndex].scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+    }
+
+    function goResultsSearchMatch(delta) {
+        if (!resultsSearchMarks.length) return;
+        resultsSearchActiveIndex =
+            (resultsSearchActiveIndex + delta + resultsSearchMarks.length) % resultsSearchMarks.length;
+        updateResultsSearchMatchUi(true);
+    }
+
+    function applyResultsSearch() {
+        lastResultsSearchQuery = document.getElementById("resultsSearchInput")
+            ? document.getElementById("resultsSearchInput").value
+            : "";
+        var qlow = String(lastResultsSearchQuery).trim().toLowerCase();
+        document.querySelectorAll("#resultsContainer .card").forEach(function (card) {
+            var match = !qlow || card.textContent.toLowerCase().indexOf(qlow) !== -1;
+            card.classList.toggle("filtered-out", !match);
+        });
+        document.querySelectorAll("#resultsContainer .card-value[data-plaintext]").forEach(function (el) {
+            if (el.dataset.fieldType === "profile-codes") {
+                applyProfileCodesFieldContent(el, el.dataset.plaintext || "", lastResultsSearchQuery);
+            } else {
+                applyRichValueContent(el, el.dataset.plaintext || "", lastResultsSearchQuery);
+            }
+        });
+        collectResultsSearchMarks();
+        updateResultsSearchMatchUi(!!qlow && resultsSearchMarks.length > 0);
+        updateResultsMetaLine();
+    }
+
+    function normalizeHeaderName(name) {
+        return String(name).toLowerCase().replace(/\s+/g, " ").trim();
+    }
+
+    /** Есть ли в данных столбец с таким заголовком (проход по всем строкам — для смеси файлов). */
+    function columnExistsInDataset(columnName) {
+        if (!globalData.length) return false;
+        var target = normalizeHeaderName(columnName);
+        for (var i = 0; i < globalData.length; i++) {
+            var row = globalData[i];
+            for (var key in row) {
+                if (normalizeHeaderName(key) === target) return true;
+            }
+        }
+        return false;
+    }
+
+    function refreshActiveDisplay() {
+        activeDisplay = columnExistsInDataset(OPP10588_PZ_FIRST_COLUMN)
+            ? CONFIG.displayMicro.slice()
+            : CONFIG.displayStandard.slice();
+    }
+
+    /** Описание поля для отображения: одна колонка или несколько (merge). */
+    function getDisplaySpec(item) {
+        if (typeof item === "string") {
+            return { key: item, label: item, columns: [item], sep: "\n" };
+        }
+        return {
+            key: item.label,
+            label: item.label,
+            columns: item.columns || [],
+            sep: item.sep !== undefined ? item.sep : "\n"
+        };
+    }
+
+    /** Собрать значения из нескольких столбцов одной строки (пустые пропускаются). */
+    function getComposedRowValue(row, spec) {
+        if (!spec.columns || spec.columns.length === 0) return "";
+        if (spec.columns.length === 1) return formatDisplayValue(getRowValue(row, spec.columns[0]));
+        const parts = spec.columns
+            .map(function (c) { return getRowValue(row, c); })
+            .map(function (v) { return v === undefined ? "" : String(v).trim(); })
+            .filter(Boolean);
+        return formatDisplayValue(parts.join(spec.sep));
+    }
+
+    /** Сохранить массив заголовков из первой строки листа (для режима «Только ЛКК»). */
+    function setSheetHeaderFromWorksheet(worksheet) {
+        sheetHeaderRow = null;
+        if (!worksheet || !worksheet["!ref"]) return;
+        try {
+            var range = XLSX.utils.decode_range(worksheet["!ref"]);
+            var header = [];
+            for (var c = range.s.c; c <= range.e.c; c++) {
+                var addr = XLSX.utils.encode_cell({ r: range.s.r, c: c });
+                var cell = worksheet[addr];
+                var v = "";
+                if (cell) {
+                    if (cell.w != null && cell.w !== "") v = String(cell.w);
+                    else if (cell.v != null) v = String(cell.v);
+                }
+                header.push(v);
+            }
+            sheetHeaderRow = header;
+        } catch (e) {
+            sheetHeaderRow = null;
+        }
+    }
+
+    function getLkkHeaderSlice() {
+        if (!sheetHeaderRow || sheetHeaderRow.length === 0) return [];
+        var end = Math.min(LKK_COL_END, sheetHeaderRow.length - 1);
+        if (LKK_COL_START > end) return [];
+        return sheetHeaderRow.slice(LKK_COL_START, end + 1);
+    }
+
+    function headerNamesMatch(a, b) {
+        return String(a).toLowerCase().replace(/\s+/g, " ").trim() === String(b).toLowerCase().replace(/\s+/g, " ").trim();
+    }
+
+    function stripProfileFieldFromDisplay(list) {
+        if (CONFIG.showProfilesInCards) return list;
+        var field = CONFIG.profileCodesField;
+        return list.filter(function (item) {
+            return getDisplaySpec(item).key !== field;
+        });
+    }
+
+    /** Список полей для карточки: активная схема или только столбцы U–AL (с сохранением объединённых блоков). */
+    function getEffectiveDisplay() {
+        var list;
+        if (!CONFIG.onlyLkk) {
+            list = activeDisplay;
+        } else {
+            var headers = getLkkHeaderSlice();
+            if (headers.length === 0) {
+                list = activeDisplay;
+            } else {
+                var out = [];
+                var seenKeys = {};
+                headers.forEach(function (rawName) {
+                    var trimmed = String(rawName).trim();
+                    if (!trimmed) return;
+                    var matched = null;
+                    for (var i = 0; i < activeDisplay.length; i++) {
+                        var spec = getDisplaySpec(activeDisplay[i]);
+                        var hit = spec.columns.some(function (col) {
+                            return headerNamesMatch(col, trimmed);
+                        });
+                        if (hit) {
+                            matched = activeDisplay[i];
+                            break;
+                        }
+                    }
+                    var item = matched != null ? matched : trimmed;
+                    var k = typeof item === "string" ? item : getDisplaySpec(item).key;
+                    if (seenKeys[k]) return;
+                    seenKeys[k] = true;
+                    out.push(item);
+                });
+                list = out;
+            }
+        }
+        return stripProfileFieldFromDisplay(list);
+    }
+
+    function sanitizeId(str) {
+        return str.replace(/[^a-zA-Zа-яА-Я0-9]/g, '_');
+    }
+
+    function debounce(func, wait) {
+        let timeout;
+        return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), wait);
+        };
+    }
+
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.filter-group')) {
+            document.querySelectorAll('.dropdown-check-list').forEach(el => el.classList.remove('show'));
+        }
+    });
+
+    // Обработчик кнопки "Различия"
+    document.getElementById('toggleDiffBtn').addEventListener('click', function() {
+        CONFIG.highlightDifferences = !CONFIG.highlightDifferences;
+        if (CONFIG.highlightDifferences) {
+            this.classList.add('active');
+            this.innerText = 'Различия: Вкл';
+        } else {
+            this.classList.remove('active');
+            this.innerText = 'Различия: Выкл';
+        }
+        triggerFilterUpdate();
+    });
+
+    // Обработчик кнопки "Группы тестов"
+    document.getElementById('toggleGroupBtn').addEventListener('click', function() {
+        CONFIG.groupTests = !CONFIG.groupTests;
+        syncGroupTestsButtonUi();
+        if (
+            !CONFIG.groupTests &&
+            globalData.length >= CONFIG.largeFileRowThreshold &&
+            currentFilteredData.length > (CONFIG.maxFilteredRowsStrictProfileMode | 0)
+        ) {
+            var st = document.getElementById("status");
+            if (st) {
+                st.innerText =
+                    "Режим «1 профиль = 1 карточка» на " +
+                    globalData.length +
+                    " строках может перегрузить браузер. Сначала сузьте фильтры.";
+            }
+        }
+        triggerFilterUpdate();
+    });
+
+    // «Только ЛКК»: в карточке показывать только столбцы U–AL
+    document.getElementById("toggleLkkOnlyBtn").addEventListener("click", function () {
+        CONFIG.onlyLkk = !CONFIG.onlyLkk;
+        if (CONFIG.onlyLkk) {
+            this.classList.add("active");
+            this.innerText = "Только ЛКК: Вкл";
+        } else {
+            this.classList.remove("active");
+            this.innerText = "Только ЛКК: Выкл";
+        }
+        triggerFilterUpdate();
+    });
+
+    document.getElementById("toggleProfilesBtn").addEventListener("click", function () {
+        CONFIG.showProfilesInCards = !CONFIG.showProfilesInCards;
+        if (CONFIG.showProfilesInCards) {
+            this.classList.add("active");
+            this.innerText = "Профили: Вкл";
+        } else {
+            this.classList.remove("active");
+            this.innerText = "Профили: Выкл";
+        }
+        triggerFilterUpdate();
+    });
+
+    window.addEventListener('DOMContentLoaded', function() {
+        fetch('/api/files')
+            .then(res => res.json())
+            .then(fileNames => {
+                if(fileNames && fileNames.length > 0) {
+                    document.getElementById('manualUploadBlock').style.display = 'none';
+                    const statusEl = document.getElementById('status');
+                    statusEl.innerText = 'Обнаружена папка с данными. Выполняется автоматическое объединение файлов...';
+                    
+                    const listUl = document.getElementById('autoFilesList');
+                    listUl.innerHTML = '';
+                    fileNames.forEach(name => {
+                        const li = document.createElement('li');
+                        li.innerText = name;
+                        listUl.appendChild(li);
+                    });
+                    document.getElementById('autoFilesBlock').style.display = 'block';
+
+                    let loadedCount = 0;
+                    globalData = [];
+
+                    fileNames.forEach(name => {
+                        fetch('/' + encodeURIComponent(name))
+                            .then(fileRes => fileRes.arrayBuffer())
+                            .then(buffer => {
+                                const data = new Uint8Array(buffer);
+                                const workbook = readWorkbookArrayBuffer(data);
+                                const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                                if (loadedCount === 0) setSheetHeaderFromWorksheet(worksheet);
+                                const jsonRows = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+                                
+                                globalData = globalData.concat(jsonRows);
+                                loadedCount++;
+                                
+                                if(loadedCount === fileNames.length) {
+                                    pendingWorkbook = null;
+                                    buildRowColumnCache(globalData[0]);
+                                    applyLargeFileDefaults();
+                                    rebuildFilterUniquesIndexSync();
+                                    statusEl.innerText =
+                                        'База сформирована: ' +
+                                        fileNames.length +
+                                        ' файл(ов), ' +
+                                        globalData.length +
+                                        ' строк. Выберите фильтры.' +
+                                        (globalData.length > 5000
+                                            ? ' Для больших таблиц включите «Группы тестов».'
+                                            : '');
+                                    document.getElementById('exportBtn').style.display = 'block';
+                                    document.getElementById('exportExcelBtn').style.display = 'block';
+                                    var sheetPick = document.getElementById('sheetPicker');
+                                    if (sheetPick) sheetPick.classList.remove('visible');
+                                    refreshActiveDisplay();
+                                    buildControls();
+                                    restoreFiltersState();
+                                    updateCascadeAndResults();
+                                    updateColumnWarnings();
+                                }
+                            }).catch(err => {
+                                statusEl.innerText = 'Ошибка чтения или разбора файла «' + name + '»: ' + (err && err.message ? err.message : String(err));
+                            });
+                    });
+                }
+            })
+            .catch(err => {
+                document.getElementById('status').innerText = 'Автономный режим. Выберите файл Excel вручную.';
+            });
+    });
+
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        const statusEl = document.getElementById('status');
+        const fileNameDisplay = document.getElementById('fileNameDisplay');
+        
+        if (!file) return;
+        
+        fileNameDisplay.innerText = file.name;
+        statusEl.innerText = "Чтение файла... Пожалуйста, подождите.";
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = readWorkbookArrayBuffer(data);
+                document.getElementById('exportBtn').style.display = 'block';
+                document.getElementById('exportExcelBtn').style.display = 'block';
+                loadWorkbookIntoUI(workbook, file.name);
+            } catch (error) {
+                statusEl.innerText =
+                    'Ошибка при чтении или разборе файла: ' + (error && error.message ? error.message : String(error));
+            }
+        };
+        reader.onerror = function () {
+            statusEl.innerText = "Не удалось прочитать файл с диска. Попробуйте снова или уменьшите файл.";
+        };
+        reader.readAsArrayBuffer(file);
+    });
+
+    function createFilterDropdownItem(filterCol, val, input) {
+        const itemDiv = document.createElement("div");
+        itemDiv.className = "dropdown-item";
+        itemDiv.dataset.value = val;
+        itemDiv.dataset.searchMatch = "true";
+        itemDiv.dataset.cascadeMatch = "true";
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.value = val;
+        checkbox.checked = selectedFilters[filterCol] && selectedFilters[filterCol].has(val);
+
+        const itemLabel = document.createElement("label");
+        itemLabel.innerText = val;
+
+        itemDiv.addEventListener("click", function (e) {
+            if (e.target !== checkbox) {
+                checkbox.checked = !checkbox.checked;
+                checkbox.dispatchEvent(new Event("change"));
+            }
+        });
+
+        checkbox.addEventListener("change", function () {
+            if (this.checked) selectedFilters[filterCol].add(this.value);
+            else selectedFilters[filterCol].delete(this.value);
+            updateFilterSelectionClearUi(filterCol);
+            updateFilterInputSelectionUi(filterCol);
+            saveFiltersState();
+            updateCascadeDropdowns();
+            updateApplyButtonUi();
+        });
+
+        itemDiv.appendChild(checkbox);
+        itemDiv.appendChild(itemLabel);
+        return itemDiv;
+    }
+
+    function applyCascadeToDropdown(dropdown) {
+        var allowed = dropdown._cascadeAllowed;
+        dropdown.querySelectorAll(".dropdown-item").forEach(function (item) {
+            if (!allowed) {
+                item.dataset.cascadeMatch = "true";
+            } else {
+                item.dataset.cascadeMatch = allowed.has(item.dataset.value) ? "true" : "false";
+            }
+            updateItemVisibility(item);
+        });
+    }
+
+    function filterValueSearchRank(value, q) {
+        if (!q) {
+            return { tier: 0, pos: 0, len: String(value).length };
+        }
+        var s = String(value);
+        var lower = s.toLowerCase();
+        var pos = lower.indexOf(q);
+        if (pos < 0) {
+            return { tier: 9, pos: 9999, len: s.length };
+        }
+        var tier;
+        if (lower === q) tier = 0;
+        else if (pos === 0) tier = 1;
+        else if (pos > 0 && /[\s,;]/.test(s.charAt(pos - 1))) tier = 2;
+        else tier = 3;
+        return { tier: tier, pos: pos, len: s.length };
+    }
+
+    function compareFilterListValues(a, b, q) {
+        var ra = filterValueSearchRank(a, q);
+        var rb = filterValueSearchRank(b, q);
+        if (ra.tier !== rb.tier) return ra.tier - rb.tier;
+        if (ra.pos !== rb.pos) return ra.pos - rb.pos;
+        if (ra.len !== rb.len) return ra.len - rb.len;
+        return String(a).localeCompare(String(b), "ru", { numeric: true });
+    }
+
+    function renderFilterDropdown(dropdown, filterCol, input, query) {
+        var all = dropdown._allValues || [];
+        var lazyMin = CONFIG.filterDropdownLazyMin | 0;
+        var maxItems = CONFIG.filterDropdownMaxItems | 0;
+        var q = String(query || "")
+            .trim()
+            .toLowerCase();
+        var fragment = document.createDocumentFragment();
+
+        if (all.length > lazyMin && !q) {
+            var selected = selectedFilters[filterCol] ? Array.from(selectedFilters[filterCol]) : [];
+            selected.forEach(function (val) {
+                fragment.appendChild(createFilterDropdownItem(filterCol, val, input));
+            });
+            var hint = document.createElement("div");
+            hint.className = "dropdown-hint";
+            hint.textContent =
+                "Введите поиск — всего " + all.length + " значений (в списке до " + maxItems + ")";
+            fragment.appendChild(hint);
+            dropdown.innerHTML = "";
+            dropdown.appendChild(fragment);
+            applyCascadeToDropdown(dropdown);
+            return;
+        }
+
+        var list = all;
+        if (q) {
+            list = all.filter(function (v) {
+                return String(v).toLowerCase().indexOf(q) !== -1;
+            });
+            list.sort(function (a, b) {
+                return compareFilterListValues(a, b, q);
+            });
+        }
+        var slice = list.slice(0, maxItems);
+        slice.forEach(function (val) {
+            fragment.appendChild(createFilterDropdownItem(filterCol, val, input));
+        });
+        if (list.length > maxItems) {
+            var more = document.createElement("div");
+            more.className = "dropdown-hint";
+            more.textContent = "Показано " + maxItems + " из " + list.length + " — уточните запрос";
+            fragment.appendChild(more);
+        }
+        dropdown.innerHTML = "";
+        dropdown.appendChild(fragment);
+        applyCascadeToDropdown(dropdown);
+    }
+
+    function buildControls() {
+        const filtersContainer = document.getElementById('filtersContainer');
+        filtersContainer.innerHTML = '';
+        filtersContainer.style.display = 'flex';
+
+        selectedFilters = {};
+        appliedFilters = {};
+        if (!filterUniquesIndex) rebuildFilterUniquesIndex();
+
+        var filterActions = document.getElementById("filterActions");
+        if (filterActions) filterActions.classList.add("visible");
+
+        CONFIG.filters.forEach(filterCol => {
+            selectedFilters[filterCol] = new Set();
+            appliedFilters[filterCol] = new Set();
+
+            const uniqueValues = Array.from(filterUniquesIndex[filterCol] || []).sort((a, b) =>
+                String(a).localeCompare(String(b), 'ru', { numeric: true })
+            );
+
+            const group = document.createElement('div');
+            group.className = 'filter-group';
+
+            const head = document.createElement('div');
+            head.className = 'filter-group-head';
+
+            const label = document.createElement('label');
+            label.innerText = filterCol;
+
+            const selectionClearBtn = document.createElement('button');
+            selectionClearBtn.type = 'button';
+            selectionClearBtn.className = 'filter-selection-clear';
+            selectionClearBtn.dataset.filterCol = sanitizeId(filterCol);
+            selectionClearBtn.setAttribute('aria-label', 'Сбросить выбранные значения в этом фильтре');
+            selectionClearBtn.title = 'Сбросить выбор в этом фильтре';
+            selectionClearBtn.textContent = '×';
+            selectionClearBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                clearOneFilter(filterCol);
+            });
+
+            const searchWrap = document.createElement("div");
+            searchWrap.className = "filter-search-wrap";
+
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.placeholder = "Выбрать варианты (0)";
+            input.className = 'filter-search-input';
+            input.dataset.filterCol = sanitizeId(filterCol);
+
+            const dropdown = document.createElement('div');
+            dropdown.className = 'dropdown-check-list';
+            dropdown.id = 'drop_' + sanitizeId(filterCol);
+
+            dropdown._allValues = uniqueValues;
+            dropdown._filterCol = filterCol;
+
+            input.addEventListener("input", function () {
+                renderFilterDropdown(dropdown, filterCol, input, this.value);
+                updateFilterInputSelectionUi(filterCol);
+            });
+
+            input.addEventListener("click", function (e) {
+                e.stopPropagation();
+                document.querySelectorAll(".dropdown-check-list").forEach(function (el) {
+                    el.classList.remove("show");
+                });
+                dropdown.classList.add("show");
+                renderFilterDropdown(dropdown, filterCol, input, input.value);
+            });
+
+            if (uniqueValues.length <= (CONFIG.filterDropdownLazyMin | 0)) {
+                renderFilterDropdown(dropdown, filterCol, input, "");
+            } else {
+                dropdown.innerHTML = "";
+                var lazyHint = document.createElement("div");
+                lazyHint.className = "dropdown-hint";
+                lazyHint.textContent =
+                    "Список из " + uniqueValues.length + " значений — начните ввод в поле фильтра";
+                dropdown.appendChild(lazyHint);
+            }
+            head.appendChild(label);
+            head.appendChild(selectionClearBtn);
+            group.appendChild(head);
+            const countBadge = document.createElement("span");
+            countBadge.className = "filter-selection-count";
+            countBadge.dataset.filterCol = sanitizeId(filterCol);
+            countBadge.setAttribute("aria-live", "polite");
+
+            searchWrap.appendChild(input);
+            searchWrap.appendChild(countBadge);
+            group.appendChild(searchWrap);
+            group.appendChild(dropdown);
+            filtersContainer.appendChild(group);
+        });
+        updateAllFilterSelectionClearUi();
+        updateFilterSummaryBar();
+        updateApplyButtonUi();
+    }
+
+    function updateItemVisibility(item) {
+        const searchMatch = item.dataset.searchMatch !== "false";
+        const cascadeMatch = item.dataset.cascadeMatch !== "false";
+        item.style.display = (searchMatch && cascadeMatch) ? 'flex' : 'none';
+    }
+
+    function updateCascadeDropdowns() {
+        CONFIG.filters.forEach(function (targetCol) {
+            var allowedValues;
+            if (filterRowIndex) {
+                var rowIds = intersectRowIdsForFilterState(selectedFilters, targetCol);
+                allowedValues = collectAllowedValuesFromRowIds(rowIds, targetCol);
+            } else {
+                var cascadeData = filterRowsBySelectedFilters(globalData, targetCol, selectedFilters);
+                allowedValues = collectAllowedValuesForColumn(cascadeData, targetCol);
+            }
+            var dropdown = document.getElementById("drop_" + sanitizeId(targetCol));
+            if (dropdown) {
+                dropdown._cascadeAllowed = allowedValues;
+                applyCascadeToDropdown(dropdown);
+            }
+        });
+    }
+
+    function applyFiltersAndRender() {
+        var anyFilterActive = false;
+        for (var col in appliedFilters) {
+            if (appliedFilters[col].size > 0) {
+                anyFilterActive = true;
+                break;
+            }
+        }
+        var filteredData = anyFilterActive
+            ? filterRowsBySelectedFilters(globalData, null, appliedFilters)
+            : globalData;
+        currentFilteredData = filteredData;
+        currentAnyFilterActive = anyFilterActive;
+        renderResultsData(filteredData, anyFilterActive);
+        updateFilterSummaryBar();
+        updateApplyButtonUi();
+    }
+
+    function updateCascadeAndResults() {
+        updateCascadeDropdowns();
+        applyFiltersAndRender();
+    }
+
+    document.getElementById("applyFiltersBtn").addEventListener("click", function () {
+        syncAppliedFromSelected();
+        saveFiltersState();
+        var statusEl = document.getElementById("status");
+        if (statusEl && filterRowIndex && globalData.length > 0) {
+            var matched = countRowsForFilterState(appliedFilters, null);
+            var anyApplied = false;
+            for (var col in appliedFilters) {
+                if (appliedFilters[col].size > 0) {
+                    anyApplied = true;
+                    break;
+                }
+            }
+            if (anyApplied) {
+                statusEl.innerText =
+                    "Найдено строк: " +
+                    matched +
+                    " из " +
+                    globalData.length +
+                    ". Строим карточки…";
+            }
+        }
+        applyFiltersAndRender();
+    });
+
+    const triggerFilterUpdate = debounce(() => {
+        applyFiltersAndRender();
+    }, 120);
+
+    document.getElementById('clearBtn').addEventListener('click', function() {
+        for (let col in selectedFilters) {
+            selectedFilters[col].clear();
+        }
+        for (let col in appliedFilters) {
+            appliedFilters[col].clear();
+        }
+        document.querySelectorAll('.filter-search-input').forEach(input => {
+            input.value = '';
+            input.placeholder = "Выбрать варианты (0)";
+        });
+        document.querySelectorAll('.dropdown-item input[type="checkbox"]').forEach(cb => {
+            cb.checked = false;
+        });
+        updateAllFilterSelectionClearUi();
+        saveFiltersState();
+        updateCascadeDropdowns();
+        applyFiltersAndRender();
+    });
+
+    document.getElementById("resultsSearchInput").addEventListener("input", function () {
+        if (resultsSearchTimer) clearTimeout(resultsSearchTimer);
+        resultsSearchTimer = setTimeout(function () {
+            applyResultsSearch();
+        }, CONFIG.resultsSearchDebounceMs);
+    });
+    document.getElementById("resultsSearchInput").addEventListener("keydown", function (e) {
+        if (e.key === "Escape") {
+            this.value = "";
+            applyResultsSearch();
+            return;
+        }
+        if (e.key === "Enter" && this.value.trim()) {
+            e.preventDefault();
+            if (e.shiftKey) goResultsSearchMatch(-1);
+            else goResultsSearchMatch(1);
+        }
+    });
+    document.getElementById("resultsSearchPrev").addEventListener("click", function () {
+        goResultsSearchMatch(-1);
+    });
+    document.getElementById("resultsSearchNext").addEventListener("click", function () {
+        goResultsSearchMatch(1);
+    });
+
+    function renderResultsData(filteredData, anyFilterActive) {
+        const container = document.getElementById('resultsContainer');
+        const resultsToolbar = document.getElementById('resultsToolbar');
+        container.innerHTML = '';
+        disconnectLazyObserver();
+        lastRenderContext = null;
+        rebuildToc([]);
+
+        if (!anyFilterActive) {
+            if (resultsToolbar) resultsToolbar.classList.remove('visible');
+            container.innerHTML = '<div class="no-data">Пожалуйста, выберите хотя бы одно значение в фильтрах выше.</div>';
+            return;
+        }
+
+        if (filteredData.length === 0) {
+            if (resultsToolbar) resultsToolbar.classList.remove('visible');
+            container.innerHTML = '<div class="no-data">По заданному запросу ничего не найдено.</div>';
+            return;
+        }
+
+        if (resultsToolbar) resultsToolbar.classList.add('visible');
+
+        let splitCol = CONFIG.headerColumn.trim();
+        if (
+            useProfileSplitForCards() &&
+            filteredData.length > (CONFIG.maxFilteredRowsStrictProfileMode | 0)
+        ) {
+            if (resultsToolbar) resultsToolbar.classList.remove("visible");
+            container.innerHTML =
+                '<div class="no-data">Отфильтровано ' +
+                filteredData.length +
+                " строк — слишком много для режима «1 профиль = 1 карточка». " +
+                'Включите <strong>«Группы тестов»</strong> или добавьте фильтры.</div>';
+            return;
+        }
+        var virtualCards = countVirtualCards(filteredData, splitCol);
+        var maxVC = CONFIG.maxVirtualCards | 0;
+        if (maxVC > 0 && virtualCards > maxVC) {
+            if (resultsToolbar) resultsToolbar.classList.remove("visible");
+            container.innerHTML =
+                '<div class="no-data">Слишком много карточек (~' +
+                virtualCards +
+                ", лимит " +
+                maxVC +
+                '). Включите <strong>«Группы тестов»</strong> или сузьте фильтры.</div>';
+            return;
+        }
+
+        var displayList = getEffectiveDisplay();
+        const testMap = new Map();
+        accumulateTestMapFromFilteredData(filteredData, testMap, splitCol);
+
+        var profileCol =
+            CONFIG.cardGroupByColumns && CONFIG.cardGroupByColumns.length
+                ? CONFIG.cardGroupByColumns[0]
+                : "Код профиля тестов";
+        var mergeSplitCols = {};
+        (CONFIG.cardGroupByColumns || []).forEach(function (c) {
+            mergeSplitCols[c] = true;
+        });
+
+        // 2. Для каждой группы формируем объект с уникальными характеристиками (без лишнего копирования строк)
+        let testList = [];
+        testMap.forEach(function (bundle) {
+            var rows = bundle.rows;
+            let params = {};
+            displayList.forEach(function (displayItem) {
+                const spec = getDisplaySpec(displayItem);
+                if (spec.key === splitCol) return;
+                if (mergeSplitCols[spec.key]) {
+                    if ((CONFIG.groupTests || !CONFIG.showProfilesInCards) && spec.key === profileCol) {
+                        var profSet = new Set();
+                        rows.forEach(function (entry) {
+                            splitListCellValue(getRowValue(entry.row, profileCol), profileCol).forEach(function (p) {
+                                if (p && p !== "Не заполнено") profSet.add(p);
+                            });
+                        });
+                        if (profSet.size) {
+                            params[spec.key] = Array.from(profSet)
+                                .sort(function (a, b) {
+                                    return a.localeCompare(b, "ru", { numeric: true });
+                                })
+                                .join(CONFIG.multiRowValueSep);
+                        }
+                    } else {
+                        var single = getBundleComposedValue(rows[0], spec, profileCol);
+                        single = formatDisplayValue(single);
+                        if (single !== undefined && String(single).trim() !== "") {
+                            params[spec.key] = single;
+                        }
+                    }
+                    return;
+                }
+                let allVals = rows.map(function (entry) {
+                    return getBundleComposedValue(entry, spec, profileCol);
+                });
+                let uniqueVals = [];
+                var seenVals = new Set();
+                allVals.forEach(function (v) {
+                    v = formatDisplayValue(v);
+                    if (v === undefined || String(v).trim() === "") return;
+                    if (seenVals.has(v)) return;
+                    seenVals.add(v);
+                    uniqueVals.push(v);
+                });
+                uniqueVals.sort(function (a, b) {
+                    return a.localeCompare(b, "ru", { numeric: true });
+                });
+                params[spec.key] = uniqueVals.join(CONFIG.multiRowValueSep);
+            });
+            testList.push({
+                testName: bundle.testName,
+                groupMatch: bundle.groupMatch,
+                params: params
+            });
+        });
+
+        testList = dedupeTestListByTestProfile(testList, splitCol);
+        testList = dedupeTestListExact(testList, splitCol, displayList);
+
+        testList.sort((a, b) => {
+            var ka = getTestProfileKey(a.testName, a.groupMatch, splitCol);
+            var kb = getTestProfileKey(b.testName, b.groupMatch, splitCol);
+            return ka.localeCompare(kb, "ru", { numeric: true });
+        });
+
+        // 3. «Группы тестов: Вкл» — одна карточка на «Код теста Название теста» (профили и строки сливаются в полях)
+        let finalCards = [];
+
+        if (CONFIG.groupTests) {
+            const groupMap = new Map();
+            testList.forEach(function (testObj) {
+                var testKey = String(testObj.testName || "").trim() || "Не заполнено";
+                if (!groupMap.has(testKey)) {
+                    var gm = {};
+                    gm[splitCol] = testKey;
+                    groupMap.set(testKey, {
+                        testName: testKey,
+                        params: Object.assign({}, testObj.params),
+                        groupMatch: Object.assign(gm, testObj.groupMatch || {})
+                    });
+                } else {
+                    mergeCardParamsFields(groupMap.get(testKey).params, testObj.params);
+                }
+            });
+
+            groupMap.forEach(function (groupObj) {
+                finalCards.push({
+                    headerTitle: groupObj.testName,
+                    testKeys: [groupObj.testName],
+                    groupMatch: groupObj.groupMatch,
+                    params: groupObj.params
+                });
+            });
+
+            finalCards.sort(function (a, b) {
+                return a.headerTitle.localeCompare(b.headerTitle, "ru", { numeric: true });
+            });
+        } else {
+            // Обычный режим: 1 карточка = 1 тест
+            testList.forEach(testObj => {
+                finalCards.push({
+                    headerTitle: testObj.testName,
+                    testKeys: [testObj.testName],
+                    groupMatch: testObj.groupMatch,
+                    params: testObj.params
+                });
+            });
+        }
+
+        if (!CONFIG.groupTests) {
+            finalCards = dedupeFinalCardsByTestProfile(finalCards, splitCol);
+            finalCards.sort(function (a, b) {
+                return getFinalCardDedupeKey(a, splitCol).localeCompare(
+                    getFinalCardDedupeKey(b, splitCol),
+                    "ru",
+                    { numeric: true }
+                );
+            });
+        }
+
+        // 4. Отрисовываем карточки результатов
+        compareSelected = [];
+        document.querySelectorAll(".card-select-cb").forEach(function (cb) {
+            cb.checked = false;
+        });
+        var comparePanel = document.getElementById("comparePanel");
+        if (comparePanel) comparePanel.classList.remove("visible");
+
+        var finalCardsVisible = finalCards.filter(function (cardObj) {
+            return displayList.some(function (displayItem) {
+                var spec = getDisplaySpec(displayItem);
+                if (spec.key === splitCol) return false;
+                var t = cardObj.params[spec.key];
+                return t !== undefined && String(t).trim() !== "";
+            });
+        });
+
+        lastRenderContext = {
+            finalCards: finalCardsVisible,
+            displayList: displayList,
+            splitCol: splitCol,
+            filteredData: filteredData
+        };
+
+        rebuildToc(finalCardsVisible);
+
+        if (finalCardsVisible.length > 0) {
+            var firstCardValues = buildFirstCardBaseline(finalCardsVisible, displayList, splitCol);
+            var batch = CONFIG.lazyRenderBatch | 0;
+            if (batch <= 0 || finalCardsVisible.length <= batch) {
+                appendRenderedCardsChunk(container, finalCardsVisible, displayList, splitCol, firstCardValues, 0, finalCardsVisible.length);
+                var metaInfo = document.createElement("div");
+                metaInfo.className = "meta-info";
+                metaInfo.id = "resultsMetaLine";
+                metaInfo.dataset.totalCards = String(finalCardsVisible.length);
+                metaInfo.dataset.filterRows = String(filteredData.length);
+                container.appendChild(metaInfo);
+                applyResultsSearch();
+            } else {
+                startLazyCardRender(container, finalCardsVisible, displayList, splitCol, filteredData, firstCardValues, batch);
+            }
+        } else {
+            if (resultsToolbar) resultsToolbar.classList.remove("visible");
+            var pillBad = document.getElementById("resultsCountPill");
+            if (pillBad) pillBad.textContent = "";
+            lastRenderContext = null;
+            rebuildToc([]);
+            container.innerHTML = '<div class="no-data">В найденных строках нет данных для отображения.</div>';
+        }
+    }
+
+    function collectCardsHtmlForExport() {
+        var sel = getSelectedCardIndicesForExport();
+        var list;
+        if (sel.length > 0) {
+            list = sel
+                .map(function (i) {
+                    return document.getElementById("card-" + i);
+                })
+                .filter(function (el) {
+                    return el && !el.classList.contains("filtered-out");
+                });
+        } else {
+            list = Array.prototype.slice.call(
+                document.querySelectorAll("#resultsContainer .card:not(.filtered-out)")
+            );
+        }
+        if (!list.length) return "";
+        var chunks = [];
+        list.forEach(function (card) {
+            var c = card.cloneNode(true);
+            c.querySelectorAll(
+                ".card-actions, .card-select-cb, .btn-card-mini, .card-value-expand-wrap, .card-value-expand, " +
+                    ".profile-codes-toolbar, .profile-codes-actions"
+            ).forEach(function (el) {
+                el.remove();
+            });
+            c.querySelectorAll('.card-value[data-field-type="profile-codes"]').forEach(function (el) {
+                var codes = parseProfileCodesList(el.dataset.plaintext || "");
+                el.removeAttribute("data-field-type");
+                el.className = "card-value card-value--multiline";
+                el.textContent = codes.join("\n");
+            });
+            chunks.push(c.outerHTML);
+        });
+        return chunks.join("\n");
+    }
+
+    function getRowsForExportExcel() {
+        var sel = getSelectedCardIndicesForExport();
+        if (sel.length === 0) return currentFilteredData;
+        if (!lastRenderContext || !lastRenderContext.finalCards) return currentFilteredData;
+        var splitCol = lastRenderContext.splitCol;
+        var cards = lastRenderContext.finalCards;
+        var keySet = {};
+        sel.forEach(function (i) {
+            var cel = document.getElementById("card-" + i);
+            if (!cel || cel.classList.contains("filtered-out")) return;
+            var fc = cards[i];
+            if (fc && fc.testKeys && fc.testKeys.length) {
+                fc.testKeys.forEach(function (k) {
+                    keySet[String(k).trim()] = true;
+                });
+            } else {
+                rowKeysFromCardElement(cel).forEach(function (k) {
+                    keySet[k] = true;
+                });
+            }
+        });
+        if (Object.keys(keySet).length === 0) return [];
+        var selectedCards = sel.map(function (i) { return cards[i]; }).filter(Boolean);
+        var hasGroupMatch = selectedCards.some(function (fc) {
+            return fc && fc.groupMatch;
+        });
+        if (hasGroupMatch) {
+            return currentFilteredData.filter(function (row) {
+                return selectedCards.some(function (fc) {
+                    if (!fc || !rowMatchesCardGroup(row, fc.groupMatch, splitCol)) return false;
+                    if (fc.testKeys && fc.testKeys.length) {
+                        var tv = getRowValue(row, splitCol);
+                        if (tv === undefined || String(tv).trim() === "") tv = "Не заполнено";
+                        else tv = String(tv).trim();
+                        return fc.testKeys.indexOf(tv) !== -1;
+                    }
+                    return true;
+                });
+            });
+        }
+        return currentFilteredData.filter(function (row) {
+            var v = getRowValue(row, splitCol);
+            if (v === undefined || String(v).trim() === "") v = "Не заполнено";
+            return keySet[String(v).trim()] === true;
+        });
+    }
+
+    document.getElementById("exportBtn").addEventListener("click", function () {
+        var cardsHtml = collectCardsHtmlForExport();
+        if (!cardsHtml) return;
+
+        var filterTexts = [];
+        for (var col in appliedFilters) {
+            if (appliedFilters[col].size > 0) {
+                filterTexts.push("<b>" + col + ":</b> " + Array.from(appliedFilters[col]).join(", "));
+            }
+        }
+
+        var exportCardIndices = getSelectedCardIndicesForExport();
+
+        var exportTemplate = [
+            '<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><title>Отчет INVITRO</title>',
+            '<style>body { font-family: "Segoe UI", sans-serif; padding: 30px; color: #333; background: #f4f7f6; }',
+            ".export-header { background: #fff; padding: 25px; border-radius: 10px; margin-bottom: 25px; border-left: 4px solid #00a0c6; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }",
+            ".card { background: #fff; padding: 25px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #00a0c6; box-shadow: 0 4px 15px rgba(0,0,0,0.03); display: grid; grid-template-columns: repeat(2, 1fr); row-gap: 12px; column-gap: 30px; }",
+            ".card-field.full-width-header { grid-column: 1 / -1; margin-bottom: 5px; padding-bottom: 12px; border-bottom: 2px solid #e2e8f0; }",
+            ".card-field.full-width-header .card-value { font-size: 16px; font-weight: 700; color: #00a0c6; }",
+            ".card-field { padding-bottom: 10px; border-bottom: 1px dashed #f0f0f0; }",
+            ".card-label { font-size: 11px; color: #5c6b70; font-weight: 700; margin-bottom: 6px; }",
+            ".card-value { font-size: 14px; color: #111; line-height: 1.62; white-space: pre-line; max-width: 42em; }",
+            ".card-value--multiline { padding: 10px 12px; background: #f7fafb; border-radius: 8px; border: 1px solid #e8eef0; max-width: none; }",
+            "mark.search-highlight { background: #fff9c4; padding: 0 1px; border-radius: 2px; }",
+            "mark.search-highlight--current { background: #ffe082; box-shadow: 0 0 0 2px #00a0c6; }",
+            ".profile-chip { display: inline-block; font-size: 11px; padding: 4px 10px; border-radius: 999px; ",
+            "background: #e8f4f8; border: 1px solid #c5e3ed; margin: 0 6px 6px 0; }</style></head><body>",
+            '<div class="export-header"><h2>Аналитический отчет</h2>' +
+                (exportCardIndices.length > 0
+                    ? '<p style="font-size:14px;margin:0 0 10px 0;">Экспорт: только отмеченные галочками карточки (' +
+                      exportCardIndices.length +
+                      ").</p>"
+                    : "") +
+                '<div class="export-filters">Параметры поиска:<br>' +
+                filterTexts.join("<br>") +
+                "</div></div>",
+            cardsHtml,
+            "</body></html>"
+        ].join("\n");
+
+        var blob = new Blob([exportTemplate], { type: "text/html;charset=utf-8" });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url;
+        var dateStr = new Date().toLocaleDateString("ru-RU").replace(/\./g, "-");
+        a.download = "Report_INVITRO_" + dateStr + ".html";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    });
+
+    document.getElementById("exportExcelBtn").addEventListener("click", function () {
+        if (!currentAnyFilterActive) return;
+        var rows = getRowsForExportExcel();
+        if (!rows.length) return;
+
+        var worksheet = XLSX.utils.json_to_sheet(rows);
+        var workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Данные");
+
+        var dateStr = new Date().toLocaleDateString("ru-RU").replace(/\./g, "-");
+        XLSX.writeFile(workbook, "Export_INVITRO_" + dateStr + ".xlsx");
+    });
+</script>
+</body>
+</html>
